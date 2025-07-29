@@ -1,112 +1,154 @@
-import { useState, useEffect, createContext, useContext } from 'react';
-import axios from 'axios';
-
-// Configuration de l'API - utiliser les rewrites Next.js
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/router';
+import { useToast } from './useToast';
 
 interface User {
   id: number;
   username: string;
   role: string;
+  roleName?: string;
   permissions: string;
-  employeeId: number | null;
-  employee?: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    status: string;
-  };
+  employeeId?: number;
+  employee?: any;
+  isActive?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
   isAuthenticated: boolean;
+  loading: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
+  checkUserStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
+  const router = useRouter();
+  const { showError, showInfo } = useToast();
 
-  // S'assurer que le composant est monté côté client
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const checkAuth = async () => {
-    if (!mounted || authChecked) return;
-    
+  // Vérifier le statut de l'utilisateur en temps réel
+  const checkUserStatus = async () => {
     try {
-      console.log('🔍 Vérification de l\'authentification...');
-      const response = await axios.get(`${API_BASE_URL}/auth/me`, { 
-        withCredentials: true 
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
+        credentials: 'include'
       });
-      console.log('✅ Utilisateur authentifié:', response.data);
-      setUser(response.data);
+
+      if (response.ok) {
+        const userData = await response.json();
+        
+        // Vérifier si l'utilisateur est toujours actif
+        if (!userData.isActive) {
+          // Utilisateur suspendu - déconnexion automatique
+          showError('Votre compte a été suspendu. Vous avez été déconnecté.');
+          logout();
+          return;
+        }
+        
+        setUser(userData);
+      } else {
+        // Token invalide ou expiré
+        setUser(null);
+      }
     } catch (error) {
-      console.log('❌ Non authentifié ou erreur:', error);
+      console.error('Erreur lors de la vérification du statut:', error);
       setUser(null);
-    } finally {
-      setLoading(false);
-      setAuthChecked(true);
     }
   };
 
+  // Vérification périodique du statut (toutes les 30 secondes)
+  useEffect(() => {
+    if (user && !loading) {
+      const interval = setInterval(checkUserStatus, 30000); // 30 secondes
+      return () => clearInterval(interval);
+    }
+  }, [user, loading]);
+
+  // Vérification lors du changement de page
+  useEffect(() => {
+    if (user && !loading && router.pathname) {
+      checkUserStatus();
+    }
+  }, [router.pathname, user, loading]);
+
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      console.log('🔐 Tentative de connexion...');
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-        username,
-        password
-      }, { withCredentials: true });
-      
-      console.log('✅ Connexion réussie:', response.data.user);
-      setUser(response.data.user);
-      return true;
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Vérifier si l'utilisateur est actif
+        if (!data.user.isActive) {
+          showError('Votre compte est suspendu. Contactez votre administrateur.');
+          return false;
+        }
+
+        setUser(data.user);
+        return true;
+      } else {
+        return false;
+      }
     } catch (error) {
-      console.error('❌ Erreur de connexion:', error);
+      console.error('Erreur de connexion:', error);
       return false;
     }
   };
 
-  const logout = async () => {
-    try {
-      console.log('🚪 Déconnexion...');
-      await axios.post(`${API_BASE_URL}/auth/logout`, {}, { withCredentials: true });
-    } catch (error) {
-      console.error('❌ Erreur de déconnexion:', error);
-    } finally {
-      setUser(null);
-      setAuthChecked(false);
-      // Redirection simple après déconnexion
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
-    }
+  const logout = () => {
+    // Appel à l'API de déconnexion
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    }).catch(console.error);
+
+    setUser(null);
+    router.push('/login');
   };
 
+  // Vérification initiale de l'authentification
   useEffect(() => {
-    if (mounted && !authChecked) {
-      checkAuth();
-    }
-  }, [mounted, authChecked]);
+    const checkAuth = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
+          credentials: 'include'
+        });
 
-  const value = {
-    user,
-    loading: !mounted || loading,
-    isAuthenticated: !!user,
-    login,
-    logout
-  };
+        if (response.ok) {
+          const userData = await response.json();
+          
+          // Vérifier si l'utilisateur est actif
+          if (!userData.isActive) {
+            showError('Votre compte a été suspendu. Vous avez été déconnecté.');
+            setUser(null);
+            router.push('/login');
+            return;
+          }
+          
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification de l\'authentification:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, login, logout, checkUserStatus }}>
       {children}
     </AuthContext.Provider>
   );

@@ -10,11 +10,13 @@ interface EmployeeAttributes {
   address?: string;
   birthDate: Date;
   hireDate: Date;
-  jobTitleId: number;
-  departmentId: number;
+  jobTitleId?: number;
+  departmentId?: number;
   managerId?: number; // Auto-relation pour la hiérarchie
   status: string; // actif, suspendu, démissionnaire, licencié
   photoUrl?: string;
+  contractEndDate?: Date; // Pour les stagiaires et contrats temporaires
+  employeeType?: string; // permanent, stagiaire, cdi, cdd
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -30,11 +32,13 @@ export class Employee extends Model<EmployeeAttributes, EmployeeCreationAttribut
   public address?: string;
   public birthDate!: Date;
   public hireDate!: Date;
-  public jobTitleId!: number;
-  public departmentId!: number;
+  public jobTitleId?: number;
+  public departmentId?: number;
   public managerId?: number;
   public status!: string;
   public photoUrl?: string;
+  public contractEndDate?: Date;
+  public employeeType?: string;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
 
@@ -94,11 +98,11 @@ Employee.init(
     },
     jobTitleId: {
       type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
+      allowNull: true,
     },
     departmentId: {
       type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
+      allowNull: true,
     },
     managerId: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -112,6 +116,15 @@ Employee.init(
     photoUrl: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    contractEndDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    employeeType: {
+      type: DataTypes.ENUM('permanent', 'stagiaire', 'cdi', 'cdd'),
+      allowNull: true,
+      defaultValue: 'permanent',
     },
   },
   {

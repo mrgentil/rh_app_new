@@ -15,7 +15,18 @@ router.get('/', async (req, res) => {
         }
       ]
     });
-    res.json(roles);
+
+    // Transformer les données pour inclure le nombre d'utilisateurs
+    const rolesWithUserCount = roles.map(role => {
+      const roleData = role.toJSON();
+      return {
+        ...roleData,
+        userCount: (roleData as any).Users?.length || 0,
+        Users: undefined // Supprimer les données utilisateurs détaillées
+      };
+    });
+
+    res.json(rolesWithUserCount);
   } catch (error) {
     res.status(500).json({ error: 'Erreur serveur' });
   }

@@ -1,294 +1,420 @@
-import { useEffect, useState } from 'react';
-import Layout from '../../components/Layout';
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaDownload, FaEye, FaMoneyCheckAlt, FaFileAlt } from 'react-icons/fa';
-import { MdMoreVert, MdPerson, MdDateRange } from 'react-icons/md';
-import Link from 'next/link';
-import axios from 'axios';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import Layout from '../../components/Layout';
+import Head from 'next/head';
+import { FaPlus, FaEdit, FaTrash, FaEye, FaMoneyBillWave, FaDownload, FaFilePdf, FaFileExcel } from 'react-icons/fa';
+import Link from 'next/link';
 
 interface Payroll {
   id: number;
-  employeId: number;
-  mois: string;
-  annee: number;
-  montant: number;
-  statut: string;
+  employeeId: number;
+  employeeName: string;
+  month: string;
+  year: string;
+  baseSalary: number;
+  bonus: number;
+  deductions: number;
+  netSalary: number;
+  status: 'pending' | 'paid' | 'cancelled';
+  paymentDate?: string;
+  createdAt: string;
 }
 
 export default function PaiePage() {
-  const [paies, setPaies] = useState<Payroll[]>([]);
+  const { user, isAuthenticated } = useAuth();
+  const [payrolls, setPayrolls] = useState<Payroll[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
-  const { user } = useAuth();
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
-    axios.get<Payroll[]>('http://localhost:4000/api/paie', { withCredentials: true })
-      .then(res => setPaies(res.data))
-      .catch(() => setError('Erreur de chargement'))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
 
-  const canEdit = user && (user.role === 'ADMIN' || user.role === 'MANAGER');
+    fetchPayrolls();
+  }, [isAuthenticated, selectedMonth, selectedYear]);
 
-  const filteredPaies = paies.filter(paie => {
-    const matchesSearch = `${paie.mois} ${paie.annee}`.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = !filterStatus || paie.statut === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
-
-  const getStatusColor = (statut: string) => {
-    switch (statut) {
-      case 'payé': return 'bg-green-100 text-green-800';
-      case 'en attente': return 'bg-yellow-100 text-yellow-800';
-      case 'annulé': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const fetchPayrolls = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/payroll?month=${selectedMonth}&year=${selectedYear}`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors du chargement des bulletins de paie');
+      }
+      
+      const data = await response.json();
+      setPayrolls(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getMonthColor = (mois: string) => {
-    const colors = {
-      'Janvier': 'bg-blue-100 text-blue-800',
-      'Février': 'bg-purple-100 text-purple-800',
-      'Mars': 'bg-green-100 text-green-800',
-      'Avril': 'bg-pink-100 text-pink-800',
-      'Mai': 'bg-yellow-100 text-yellow-800',
-      'Juin': 'bg-indigo-100 text-indigo-800',
-      'Juillet': 'bg-red-100 text-red-800',
-      'Août': 'bg-orange-100 text-orange-800',
-      'Septembre': 'bg-teal-100 text-teal-800',
-      'Octobre': 'bg-cyan-100 text-cyan-800',
-      'Novembre': 'bg-amber-100 text-amber-800',
-      'Décembre': 'bg-emerald-100 text-emerald-800'
-    };
-    return colors[mois as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  const handleDeletePayroll = async (payrollId: number) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce bulletin de paie ?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/payroll/${payrollId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la suppression');
+      }
+
+      fetchPayrolls();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erreur lors de la suppression');
+    }
   };
 
-  const totalMontant = paies.reduce((sum, paie) => sum + (paie.montant || 0), 0);
-  const moyenneMontant = paies.length > 0 ? totalMontant / paies.length : 0;
+  const handleDownloadPayslip = async (payrollId: number) => {
+    try {
+      const response = await fetch(`/api/payroll/${payrollId}/payslip`, {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du téléchargement');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bulletin-paie-${payrollId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erreur lors du téléchargement');
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const response = await fetch(`/api/payroll/export?month=${selectedMonth}&year=${selectedYear}`, {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'export');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `paie-${selectedMonth}-${selectedYear}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erreur lors de l\'export');
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">En attente</span>;
+      case 'paid':
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Payé</span>;
+      case 'cancelled':
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Annulé</span>;
+      default:
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Inconnu</span>;
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(amount);
+  };
+
+  const getMonthName = (month: number) => {
+    const months = [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    ];
+    return months[month - 1];
+  };
 
   if (loading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="text-center text-red-600 p-6">
+          <p>Erreur: {error}</p>
         </div>
       </Layout>
     );
   }
 
   return (
-    <Layout>
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
+    <>
+      <Head>
+        <title>RH App - Gestion de la Paie</title>
+      </Head>
+      <Layout>
+        <div className="p-6">
+          {/* En-tête */}
+          <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Gestion de la Paie</h1>
-              <p className="text-gray-600 mt-1">Gérez les fiches de paie et les salaires</p>
+              <p className="text-gray-600 mt-2">
+                Gérez les salaires et les bulletins de paie
+              </p>
             </div>
-            {canEdit && (
-              <Link 
-                href="/paie/nouveau" 
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg shadow-sm transition-colors flex items-center space-x-2"
+            <div className="flex space-x-3">
+              <button
+                onClick={handleExportExcel}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
               >
-                <FaPlus />
-                <span>Nouvelle fiche de paie</span>
+                <FaFileExcel className="mr-2" />
+                Export Excel
+              </button>
+              <Link 
+                href="/paie/nouveau"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
+              >
+                <FaPlus className="mr-2" />
+                Nouveau Bulletin
               </Link>
-            )}
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Fiches</p>
-                  <p className="text-2xl font-bold text-gray-900">{paies.length}</p>
-                </div>
-                <div className="bg-blue-100 p-3 rounded-lg">
-                  <FaFileAlt className="text-xl text-blue-600" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Montant</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalMontant.toLocaleString()}€</p>
-                </div>
-                <div className="bg-green-100 p-3 rounded-lg">
-                  <FaMoneyCheckAlt className="text-xl text-green-600" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Moyenne</p>
-                  <p className="text-2xl font-bold text-gray-900">{moyenneMontant.toLocaleString()}€</p>
-                </div>
-                <div className="bg-purple-100 p-3 rounded-lg">
-                  <FaMoneyCheckAlt className="text-xl text-purple-600" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Payées</p>
-                  <p className="text-2xl font-bold text-gray-900">{paies.filter(p => p.statut === 'payé').length}</p>
-                </div>
-                <div className="bg-green-100 p-3 rounded-lg">
-                  <div className="w-6 h-6 bg-green-500 rounded-full"></div>
-                </div>
-              </div>
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Rechercher une fiche de paie..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-              <div className="md:w-48">
+          {/* Filtres */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="flex items-center space-x-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mois</label>
                 <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                  <option value="">Tous les statuts</option>
-                  <option value="payé">Payé</option>
-                  <option value="en attente">En attente</option>
-                  <option value="annulé">Annulé</option>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                    <option key={month} value={month}>
+                      {getMonthName(month)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Année</label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Paie Grid */}
-        {error ? (
-          <div className="text-center text-red-500 bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            {error}
+          {/* Statistiques */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+                  <FaMoneyBillWave className="text-xl" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Salaire Brut</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(payrolls.reduce((sum, p) => sum + p.baseSalary, 0))}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-green-100 text-green-600">
+                  <FaMoneyBillWave className="text-xl" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Salaire Net</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(payrolls.reduce((sum, p) => sum + p.netSalary, 0))}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                  <FaMoneyBillWave className="text-xl" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Primes</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(payrolls.reduce((sum, p) => sum + p.bonus, 0))}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-red-100 text-red-600">
+                  <FaMoneyBillWave className="text-xl" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Déductions</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(payrolls.reduce((sum, p) => sum + p.deductions, 0))}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPaies.map(paie => (
-              <div key={paie.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="p-6">
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-                        <FaMoneyCheckAlt className="text-white text-lg" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Employé #{paie.employeId}</h3>
-                        <p className="text-sm text-gray-600">{paie.mois} {paie.annee}</p>
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg">
-                        <MdMoreVert />
-                      </button>
-                    </div>
-                  </div>
 
-                  {/* Info */}
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Montant:</span>
-                      <span className="text-lg font-bold text-gray-900">{paie.montant ? paie.montant.toLocaleString() : '0'}€</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <MdDateRange className="text-gray-400" />
-                      <span>{paie.mois} {paie.annee}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <MdPerson className="text-gray-400" />
-                      <span>ID: {paie.employeId}</span>
-                    </div>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(paie.statut)}`}>
-                      {paie.statut}
-                    </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getMonthColor(paie.mois)}`}>
-                      {paie.mois}
-                    </span>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-500">ID: {paie.id}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Link 
-                        href={`/paie/${paie.id}`}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                        title="Voir détails"
-                      >
-                        <FaEye />
-                      </Link>
-                      <a
-                        href={`http://localhost:4000/api/paie/${paie.id}/pdf`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Télécharger PDF"
-                      >
-                        <FaDownload />
-                      </a>
-                      {canEdit && (
-                        <>
-                          <Link 
-                            href={`/paie/${paie.id}`}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          {/* Tableau des bulletins de paie */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Employé
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Période
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Salaire Brut
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Primes
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Déductions
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Salaire Net
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Statut
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {payrolls.map((payroll) => (
+                    <tr key={payroll.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {payroll.employeeName}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {getMonthName(payroll.month)} {payroll.year}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {formatCurrency(payroll.baseSalary)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {formatCurrency(payroll.bonus)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {formatCurrency(payroll.deductions)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {formatCurrency(payroll.netSalary)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(payroll.status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2">
+                          <Link
+                            href={`/paie/${payroll.id}`}
+                            className="text-indigo-600 hover:text-indigo-900 p-1"
+                            title="Voir"
+                          >
+                            <FaEye />
+                          </Link>
+                          <Link
+                            href={`/paie/${payroll.id}/edit`}
+                            className="text-yellow-600 hover:text-yellow-900 p-1"
                             title="Modifier"
                           >
                             <FaEdit />
                           </Link>
-                          <button 
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          <button
+                            onClick={() => handleDownloadPayslip(payroll.id)}
+                            className="text-green-600 hover:text-green-900 p-1"
+                            title="Télécharger"
+                          >
+                            <FaDownload />
+                          </button>
+                          <button
+                            onClick={() => handleDeletePayroll(payroll.id)}
+                            className="text-red-600 hover:text-red-900 p-1"
                             title="Supprimer"
                           >
                             <FaTrash />
                           </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {filteredPaies.length === 0 && !loading && (
-          <div className="text-center bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <div className="text-gray-400 mb-4">
-              <FaMoneyCheckAlt className="text-6xl mx-auto" />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune fiche de paie trouvée</h3>
-            <p className="text-gray-600">Aucune fiche de paie ne correspond à vos critères de recherche.</p>
+
+            {payrolls.length === 0 && (
+              <div className="text-center py-8">
+                <FaMoneyBillWave className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-gray-500">Aucun bulletin de paie trouvé pour cette période</p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </Layout>
+        </div>
+      </Layout>
+    </>
   );
 }

@@ -86,6 +86,7 @@ router.post('/login', async (req, res) => {
         role: (user as any).Role?.name,
         permissions: (user as any).Role?.permissions,
         employeeId: user.employeeId,
+        isActive: user.isActive,
         employee: (user as any).Employee ? {
           firstName: (user as any).Employee.firstName,
           lastName: (user as any).Employee.lastName,
@@ -103,7 +104,19 @@ router.post('/login', async (req, res) => {
 // Route pour obtenir les infos de l'utilisateur connecté
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const user = (req as any).user;
+    const userId = (req as any).user.id;
+    
+    // Récupérer l'utilisateur avec ses relations
+    const user = await User.findByPk(userId, {
+      include: [
+        { model: Role, attributes: ['name', 'permissions'] },
+        { model: Employee, attributes: ['firstName', 'lastName', 'email', 'status'] }
+      ]
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
     
     res.json({
       id: user.id,
@@ -111,6 +124,7 @@ router.get('/me', authenticateToken, async (req, res) => {
       role: (user as any).Role?.name,
       permissions: (user as any).Role?.permissions,
       employeeId: user.employeeId,
+      isActive: user.isActive,
       employee: (user as any).Employee ? {
         firstName: (user as any).Employee.firstName,
         lastName: (user as any).Employee.lastName,

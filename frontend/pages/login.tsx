@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useToast } from '../hooks/useToast';
 import Head from 'next/head';
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaBuilding } from 'react-icons/fa';
 
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { login, user, isAuthenticated, loading: authLoading } = useAuth();
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     setMounted(true);
@@ -41,9 +43,23 @@ export default function LoginPage() {
 
     try {
       const success = await login(username, password);
-      if (!success) setError("Nom d'utilisateur ou mot de passe incorrect");
-    } catch (error) {
-      setError('Erreur de connexion. Veuillez réessayer.');
+      if (success) {
+        showSuccess('Connexion réussie ! Redirection en cours...');
+      } else {
+        const errorMsg = "Nom d'utilisateur ou mot de passe incorrect";
+        setError(errorMsg);
+        showError(errorMsg);
+      }
+    } catch (error: any) {
+      let errorMsg = 'Erreur de connexion. Veuillez réessayer.';
+      
+      // Vérifier si c'est une erreur de suspension
+      if (error.message && error.message.includes('suspendu')) {
+        errorMsg = 'Votre compte est suspendu. Contactez votre administrateur.';
+      }
+      
+      setError(errorMsg);
+      showError(errorMsg);
     } finally {
       setLoading(false);
     }

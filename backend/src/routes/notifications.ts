@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { Notification } from '../models/Notification';
-import { authenticateJWT } from '../middleware/auth';
+import { authenticateJWT, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
 // GET notifications for user
-router.get('/', authenticateJWT, async (req: any, res) => {
+router.get('/', authenticateJWT, async (req: AuthRequest, res) => {
   try {
-    const employeeId = req.user.id;
+    const employeeId = req.user!.id;
     const notifs = await Notification.findAll({ where: { employeeId }, order: [['createdAt', 'DESC']] });
     res.json(notifs);
   } catch (error) {
@@ -16,9 +16,9 @@ router.get('/', authenticateJWT, async (req: any, res) => {
 });
 
 // POST create notification
-router.post('/', authenticateJWT, async (req: any, res) => {
+router.post('/', authenticateJWT, async (req: AuthRequest, res) => {
   try {
-    const notif = await Notification.create({ ...req.body, employeeId: req.user.id });
+    const notif = await Notification.create({ ...req.body, employeeId: req.user!.id });
     res.status(201).json(notif);
   } catch (error) {
     res.status(400).json({ error: 'Erreur création notification' });

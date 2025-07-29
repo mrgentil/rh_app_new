@@ -5,8 +5,10 @@ interface UserAttributes {
   id: number;
   employeeId?: number;
   username: string;
+  email?: string;
   password: string;
   roleId: number;
+  isActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -17,8 +19,10 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public id!: number;
   public employeeId?: number;
   public username!: string;
+  public email?: string;
   public password!: string;
   public roleId!: number;
+  public isActive?: boolean;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
 
@@ -45,6 +49,11 @@ User.init(
       allowNull: false,
       unique: true,
     },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -52,6 +61,11 @@ User.init(
     roleId: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: true,
     },
   },
   {

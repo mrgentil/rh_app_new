@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Sidebar from './Sidebar';
 import { FaSearch, FaMoon, FaSun, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '../hooks/useAuth';
+import { SuspensionNotification } from './SuspensionNotification';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className={`min-h-screen flex ${darkMode ? 'dark' : ''}`}>
+      <SuspensionNotification />
       <Sidebar />
       
       {/* Main content */}

@@ -91,7 +91,7 @@ export default function EmployeeDetailsPage() {
     }
   };
 
-  const canEdit = user && (user.role === 'Admin' || user.role === 'RH');
+  const canEdit = user && (user.roleName === 'Admin' || user.roleName === 'RH');
 
   if (loading) {
     return (

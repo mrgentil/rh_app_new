@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FaHome, FaUsers, FaCalendarAlt, FaMoneyCheckAlt, FaUserCog, FaBuilding } from 'react-icons/fa';
+import { FaHome, FaUsers, FaCalendarAlt, FaMoneyCheckAlt, FaUserCog, FaBuilding, FaShieldAlt, FaCog } from 'react-icons/fa';
 
 export default function Sidebar() {
   return (
@@ -37,6 +37,16 @@ export default function Sidebar() {
         <Link href="/users" className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors">
           <FaUserCog className="mr-3" />
           <span>Utilisateurs</span>
+        </Link>
+        
+        <Link href="/roles" className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors">
+          <FaShieldAlt className="mr-3" />
+          <span>Rôles</span>
+        </Link>
+        
+        <Link href="/settings" className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors">
+          <FaCog className="mr-3" />
+          <span>Paramètres</span>
         </Link>
       </nav>
     </div>

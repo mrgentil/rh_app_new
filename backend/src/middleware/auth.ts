@@ -29,6 +29,14 @@ export async function authenticateJWT(req: AuthRequest, res: Response, next: Nex
     if (!user) {
       return res.status(401).json({ error: 'Utilisateur non trouvé' });
     }
+
+    // Vérifier si l'utilisateur est actif
+    if (!user.isActive) {
+      return res.status(401).json({ 
+        error: 'Compte suspendu. Contactez votre administrateur.',
+        suspended: true
+      });
+    }
     
     req.user = {
       ...decoded,

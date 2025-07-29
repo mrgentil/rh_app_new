@@ -5,11 +5,14 @@ import { FaArrowLeft, FaSave, FaUserPlus } from 'react-icons/fa';
 import Link from 'next/link';
 import { employeeService, CreateEmployeeData } from '../../services/employeeService';
 import { useAuth } from '../../hooks/useAuth';
+import { roleService, Role } from '../../services/roleService';
+import { useToast } from '../../hooks/useToast';
 
 export default function NouveauEmploye() {
   const router = useRouter();
   const { user } = useAuth();
-  const [form, setForm] = useState<CreateEmployeeData>({
+  const { showSuccess, showError, showLoading, dismiss } = useToast();
+  const [form, setForm] = useState<CreateEmployeeData & { roleId?: number }>({
     firstName: '',
     lastName: '',
     email: '',
@@ -21,48 +24,90 @@ export default function NouveauEmploye() {
     jobTitleId: undefined,
     departmentId: undefined,
     managerId: undefined,
+    roleId: undefined,
+    contractEndDate: '',
+    employeeType: 'permanent',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [departments, setDepartments] = useState([]);
   const [jobTitles, setJobTitles] = useState([]);
   const [managers, setManagers] = useState([]);
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({
       ...prev,
-      [name]: name === 'jobTitleId' || name === 'departmentId' || name === 'managerId' 
+      [name]: name === 'jobTitleId' || name === 'departmentId' || name === 'managerId' || name === 'roleId'
         ? (value ? parseInt(value) : undefined) 
         : value
     }));
+
+    // Si le type d'employé change, mettre à jour automatiquement le rôle
+    if (name === 'employeeType') {
+      try {
+        const defaultRole = await roleService.getDefaultRoleForEmployeeType(value);
+        if (defaultRole) {
+          setForm(prev => ({ ...prev, roleId: defaultRole.id }));
+        }
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour du rôle par défaut:', error);
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const loadingToast = showLoading('Création de l\'employé en cours...');
     setLoading(true);
     setError(null);
     
     try {
       await employeeService.createEmployee(form);
+      dismiss(loadingToast);
+      showSuccess('Employé créé avec succès !');
       router.push('/employes');
     } catch (err) {
-      setError("Erreur lors de la création de l'employé");
+      dismiss(loadingToast);
+      const errorMessage = "Erreur lors de la création de l'employé";
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  // Vérifier les permissions
+  // Vérifier les permissions et charger les rôles disponibles
   useEffect(() => {
     if (user && !(user.roleName === 'Admin' || user.roleName === 'RH')) {
       router.push('/unauthorized');
+    } else if (user) {
+      loadAvailableRoles();
     }
   }, [user, router]);
+
+  const loadAvailableRoles = async () => {
+    try {
+      const roles = await roleService.getAvailableRolesForEmployeeCreation(user?.roleName || '');
+      setAvailableRoles(roles);
+      
+      // Sélectionner automatiquement le rôle par défaut selon le type d'employé
+      const defaultRole = await roleService.getDefaultRoleForEmployeeType(form.employeeType);
+      if (defaultRole) {
+        setForm(prev => ({ ...prev, roleId: defaultRole.id }));
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des rôles:', error);
+    }
+  };
 
   if (!user || !(user.roleName === 'Admin' || user.roleName === 'RH')) {
     return null;
   }
+
+  // Vérifier si l'utilisateur peut créer un Admin
+  const canCreateAdmin = user.roleName === 'Admin';
 
   return (
     <Layout>
@@ -217,6 +262,71 @@ export default function NouveauEmploye() {
                   {/* TODO: Charger les managers depuis l'API */}
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Type d'employé *</label>
+                <select
+                  name="employeeType"
+                  value={form.employeeType}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="permanent">Permanent</option>
+                  <option value="cdi">CDI</option>
+                  <option value="cdd">CDD</option>
+                  <option value="stagiaire">Stagiaire</option>
+                </select>
+              </div>
+
+              {/* Date de fin de contrat pour les contrats temporaires */}
+              {(form.employeeType === 'cdd' || form.employeeType === 'stagiaire') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date de fin de contrat *</label>
+                  <input
+                    name="contractEndDate"
+                    type="date"
+                    value={form.contractEndDate}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              )}
+
+              {/* Sélection du rôle - maintenant obligatoire pour tous */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Rôle utilisateur *</label>
+                <select
+                  name="roleId"
+                  value={form.roleId || ''}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Sélectionner un rôle</option>
+                  {availableRoles.map(role => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-sm text-gray-500 mt-1">
+                  Tous les employés auront un compte utilisateur pour se connecter au système
+                </p>
+              </div>
+
+              {/* Message d'information pour les RH */}
+              {!canCreateAdmin && user?.roleName === 'RH' && (
+                <div className="md:col-span-2">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800">
+                      <strong>Note :</strong> En tant que RH, vous ne pouvez pas créer de comptes administrateurs. 
+                      Seul un Admin peut créer d'autres comptes Admin.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {error && (

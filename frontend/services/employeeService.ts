@@ -17,6 +17,8 @@ export interface Employee {
   jobTitleId?: number;
   departmentId?: number;
   managerId?: number;
+  contractEndDate?: string;
+  employeeType?: string;
   Department?: {
     id: number;
     name: string;
@@ -55,6 +57,9 @@ export interface CreateEmployeeData {
   jobTitleId?: number;
   departmentId?: number;
   managerId?: number;
+  roleId?: number; // ID du rôle pour créer un compte utilisateur
+  contractEndDate?: string;
+  employeeType?: string;
 }
 
 export interface UpdateEmployeeData extends Partial<CreateEmployeeData> {}

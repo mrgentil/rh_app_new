@@ -15,7 +15,18 @@ router.get('/', async (req, res) => {
         }
       ]
     });
-    res.json(jobTitles);
+    
+    // Transformer les données pour la compatibilité avec le frontend
+    const transformedJobTitles = jobTitles.map(jobTitle => ({
+      id: jobTitle.id,
+      name: jobTitle.title, // Transformer 'title' en 'name'
+      description: jobTitle.description,
+      createdAt: jobTitle.createdAt,
+      updatedAt: jobTitle.updatedAt,
+      employees: (jobTitle as any).employees || []
+    }));
+    
+    res.json(transformedJobTitles);
   } catch (error) {
     res.status(500).json({ error: 'Erreur serveur' });
   }

@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { Employee, User, Notification, JobTitle, Department, Contract, Role } from '../models';
-import { authenticateJWT, authorizeRoles } from '../middleware/auth';
+import { authenticateJWT, authorizeRoles, AuthRequest } from '../middleware/auth';
 import PDFDocument from 'pdfkit';
 
 const router = Router();
 
 // EXPORT CSV employés
-router.get('/export/csv', authenticateJWT, async (req, res) => {
+router.get('/export/csv', authenticateJWT, async (req: AuthRequest, res) => {
   try {
     const employees = await Employee.findAll({
       include: [
@@ -53,7 +53,7 @@ router.get('/export/csv', authenticateJWT, async (req, res) => {
 });
 
 // EXPORT Excel employés
-router.get('/export/excel', authenticateJWT, async (req, res) => {
+router.get('/export/excel', authenticateJWT, async (req: AuthRequest, res) => {
   try {
     const employees = await Employee.findAll({
       include: [
@@ -104,7 +104,7 @@ router.get('/export/excel', authenticateJWT, async (req, res) => {
 });
 
 // GET all employees with relations
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, async (req: AuthRequest, res) => {
   try {
     const employees = await Employee.findAll({
       include: [
@@ -125,7 +125,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET one employee with relations
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req: AuthRequest, res) => {
   try {
     const employee = await Employee.findByPk(req.params.id, {
       include: [
@@ -153,7 +153,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // EXPORT PDF contrat de travail
-router.get('/:id/contrat', authenticateJWT, async (req, res) => {
+router.get('/:id/contrat', authenticateJWT, async (req: AuthRequest, res) => {
   try {
     const employee = await Employee.findByPk(req.params.id, {
       include: [
@@ -193,9 +193,61 @@ router.get('/:id/contrat', authenticateJWT, async (req, res) => {
 });
 
 // CREATE employee
-router.post('/', authenticateJWT, authorizeRoles('Admin', 'RH'), async (req, res) => {
+router.post('/', authenticateJWT, authorizeRoles('Admin', 'RH'), async (req: AuthRequest, res) => {
   try {
+    // Vérification supplémentaire : seul un Admin peut créer un employé avec le rôle Admin
+    if (req.user.roleName === 'RH' && req.body.roleId) {
+      // On récupère le rôle demandé
+      const role = await Role.findByPk(req.body.roleId);
+      if (role && role.name === 'Admin') {
+        return res.status(403).json({ error: 'Seul un Admin peut créer un autre Admin.' });
+      }
+    }
+
+    // Créer l'employé
     const employee = await Employee.create(req.body);
+    
+    // Déterminer le rôle par défaut selon le type d'employé
+    let defaultRoleId = null;
+    
+    if (req.body.roleId) {
+      // Si un rôle est spécifié explicitement, l'utiliser
+      defaultRoleId = req.body.roleId;
+    } else {
+      // Sinon, déterminer le rôle par défaut selon le type d'employé
+      const employeeType = req.body.employeeType || 'permanent';
+      
+      if (employeeType === 'stagiaire') {
+        const stagiaireRole = await Role.findOne({ where: { name: 'Stagiaire' } });
+        defaultRoleId = stagiaireRole?.id;
+      } else {
+        const employeRole = await Role.findOne({ where: { name: 'Employé' } });
+        defaultRoleId = employeRole?.id;
+      }
+    }
+    
+    // Créer automatiquement un compte utilisateur pour TOUS les employés
+    if (defaultRoleId) {
+      const role = await Role.findByPk(defaultRoleId);
+      if (role) {
+        // Générer un mot de passe temporaire (l'employé devra le changer à sa première connexion)
+        const tempPassword = Math.random().toString(36).slice(-8);
+        const bcrypt = require('bcryptjs');
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        
+        await User.create({
+          employeeId: employee.id,
+          username: employee.email,
+          password: hashedPassword,
+          roleId: defaultRoleId
+        });
+
+        // Notifier l'employé de la création de son compte
+        console.log(`✅ Compte utilisateur créé pour ${employee.email}`);
+        console.log(`🔑 Mot de passe temporaire: ${tempPassword}`);
+        console.log(`👤 Rôle attribué: ${role.name}`);
+      }
+    }
     
     // Notifie tous les admins RH
     const admins = await User.findAll({ 
@@ -224,11 +276,17 @@ router.post('/', authenticateJWT, authorizeRoles('Admin', 'RH'), async (req, res
 });
 
 // UPDATE employee
-router.put('/:id', authenticateJWT, authorizeRoles('Admin', 'RH'), async (req, res) => {
+router.put('/:id', authenticateJWT, authorizeRoles('Admin', 'RH'), async (req: AuthRequest, res) => {
   try {
     const employee = await Employee.findByPk(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employé non trouvé' });
-    
+    // Vérification supplémentaire : seul un Admin peut modifier un employé pour le passer Admin
+    if (req.user.roleName === 'RH' && req.body.roleId) {
+      const role = await Role.findByPk(req.body.roleId);
+      if (role && role.name === 'Admin') {
+        return res.status(403).json({ error: 'Seul un Admin peut promouvoir un employé en Admin.' });
+      }
+    }
     await employee.update(req.body);
     
     // Audit log
@@ -242,7 +300,7 @@ router.put('/:id', authenticateJWT, authorizeRoles('Admin', 'RH'), async (req, r
 });
 
 // DELETE employee
-router.delete('/:id', authenticateJWT, authorizeRoles('Admin'), async (req, res) => {
+router.delete('/:id', authenticateJWT, authorizeRoles('Admin'), async (req: AuthRequest, res) => {
   try {
     const employee = await Employee.findByPk(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employé non trouvé' });

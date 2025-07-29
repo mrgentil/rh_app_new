@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuditLog } from '../models/AuditLog';
 
-export async function logAudit(action: string, table: string, rowId: number | null, details: string, req: Request) {
+export async function logAudit(action: string, table: string, rowId: number | null, details: string, req: any) {
   try {
     await AuditLog.create({
       userId: req.user ? req.user.id : null,
@@ -18,7 +18,7 @@ export async function logAudit(action: string, table: string, rowId: number | nu
 
 // Middleware générateur pour usage dans routes :
 export function auditLogMiddleware(action: string, table: string) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: any, res: Response, next: NextFunction) => {
     res.on('finish', async () => {
       if (['POST', 'PUT', 'DELETE'].includes(req.method) && res.statusCode < 400) {
         let rowId = null;
