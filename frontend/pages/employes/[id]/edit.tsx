@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { employeeService, UpdateEmployeeData, Employee } from '../../../services/employeeService';
 import { useAuth } from '../../../hooks/useAuth';
 import { roleService, Role } from '../../../services/roleService';
+import PhotoUpload from '../../../components/PhotoUpload';
+import SalaryDisplay from '../../../components/SalaryDisplay';
 
 export default function EditEmployee() {
   const router = useRouter();
@@ -21,6 +23,8 @@ export default function EditEmployee() {
     birthDate: '',
     hireDate: '',
     status: 'actif',
+    photoUrl: '',
+    salary: undefined,
     jobTitleId: undefined,
     departmentId: undefined,
     managerId: undefined,
@@ -60,6 +64,8 @@ export default function EditEmployee() {
         birthDate: data.birthDate.split('T')[0], // Format YYYY-MM-DD pour input date
         hireDate: data.hireDate.split('T')[0],
         status: data.status,
+        photoUrl: data.photoUrl || '',
+        salary: data.salary,
         jobTitleId: data.jobTitleId,
         departmentId: data.departmentId,
         managerId: data.managerId,
@@ -87,6 +93,14 @@ export default function EditEmployee() {
         ? (value ? parseInt(value) : undefined) 
         : value
     }));
+  };
+
+  const handlePhotoChange = (photoUrl: string) => {
+    setForm(prev => ({ ...prev, photoUrl }));
+  };
+
+  const handleSalaryChange = (salary: number) => {
+    setForm(prev => ({ ...prev, salary }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -215,6 +229,27 @@ export default function EditEmployee() {
                   value={form.address}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Photo de l'employé */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Photo de profil</label>
+                <PhotoUpload
+                  currentPhotoUrl={form.photoUrl}
+                  onPhotoChange={handlePhotoChange}
+                  employeeName={`${form.firstName} ${form.lastName}`}
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Informations salariales */}
+              <div className="md:col-span-2">
+                <SalaryDisplay
+                  salary={form.salary}
+                  onSalaryChange={handleSalaryChange}
+                  editable={true}
+                  disabled={loading}
                 />
               </div>
 

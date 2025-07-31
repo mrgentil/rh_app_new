@@ -11,6 +11,9 @@ interface User {
   employeeId?: number;
   employee?: any;
   isActive?: boolean;
+  photoUrl?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 interface AuthContextType {
@@ -39,6 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const userData = await response.json();
+        console.log('🔍 Données utilisateur reçues:', {
+          id: userData.id,
+          username: userData.username,
+          photoUrl: userData.photoUrl,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          employee: userData.employee
+        });
         
         // Vérifier si l'utilisateur est toujours actif
         if (!userData.isActive) {
@@ -67,12 +78,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loading]);
 
-  // Vérification lors du changement de page
+  // Vérification lors du changement de page - seulement si l'utilisateur est connecté
   useEffect(() => {
     if (user && !loading && router.pathname) {
-      checkUserStatus();
+      // Éviter les appels multiples en utilisant un debounce
+      const timeoutId = setTimeout(() => {
+        checkUserStatus();
+      }, 500); // Augmenter le debounce
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [router.pathname, user, loading]);
+  }, [router.pathname]); // Retirer user et loading des dépendances
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
@@ -105,15 +121,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    // Appel à l'API de déconnexion
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/logout`, {
-      method: 'POST',
-      credentials: 'include'
-    }).catch(console.error);
+  const logout = async () => {
+    try {
+      console.log('🔐 Déconnexion en cours...');
+      
+      // Appel à l'API de déconnexion
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
 
-    setUser(null);
-    router.push('/login');
+      if (response.ok) {
+        console.log('✅ Déconnexion réussie côté serveur');
+      } else {
+        console.warn('⚠️ Erreur lors de la déconnexion côté serveur');
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la déconnexion:', error);
+    } finally {
+      // Toujours nettoyer côté client
+      console.log('🧹 Nettoyage côté client...');
+      setUser(null);
+      router.push('/login');
+    }
   };
 
   // Vérification initiale de l'authentification

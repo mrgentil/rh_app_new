@@ -1,239 +1,324 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import Head from 'next/head';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { FaUsers, FaBuilding, FaCalendarAlt, FaMoneyCheckAlt, FaUserCog, FaChartLine } from 'react-icons/fa';
+import { useAuth } from '../hooks/useAuth';
+import { FaUsers, FaCalendarAlt, FaMoneyCheckAlt, FaChartLine, FaBell, FaClock, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { MdDashboard, MdPerson, MdWork } from 'react-icons/md';
 import Link from 'next/link';
 
-export default function HomePage() {
-  const { user, loading, isAuthenticated } = useAuth();
-  const [mounted, setMounted] = useState(false);
+interface DashboardStats {
+  totalEmployees: number;
+  activeEmployees: number;
+  pendingLeaves: number;
+  totalPayroll: number;
+  recentActivities: Array<{
+    id: number;
+    type: string;
+    message: string;
+    time: string;
+    status: 'success' | 'warning' | 'info';
+  }>;
+}
 
-  // S'assurer que le composant est monté côté client
+export default function DashboardPage() {
+  const { user } = useAuth();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalEmployees: 0,
+    activeEmployees: 0,
+    pendingLeaves: 0,
+    totalPayroll: 0,
+    recentActivities: []
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    setMounted(true);
+    // Simuler le chargement des données
+    const loadDashboardData = async () => {
+      try {
+        // Ici vous pourriez faire des appels API réels
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        setStats({
+          totalEmployees: 24,
+          activeEmployees: 22,
+          pendingLeaves: 3,
+          totalPayroll: 125000,
+          recentActivities: [
+            {
+              id: 1,
+              type: 'employee',
+              message: 'Nouvel employé ajouté : Marie Dubois',
+              time: 'Il y a 2 heures',
+              status: 'success'
+            },
+            {
+              id: 2,
+              type: 'leave',
+              message: 'Demande de congé en attente : Jean Martin',
+              time: 'Il y a 4 heures',
+              status: 'warning'
+            },
+            {
+              id: 3,
+              type: 'payroll',
+              message: 'Paie du mois de décembre traitée',
+              time: 'Il y a 1 jour',
+              status: 'success'
+            },
+            {
+              id: 4,
+              type: 'system',
+              message: 'Mise à jour du système terminée',
+              time: 'Il y a 2 jours',
+              status: 'info'
+            }
+          ]
+        });
+      } catch (error) {
+        console.error('Erreur lors du chargement du tableau de bord:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDashboardData();
   }, []);
 
-  // Redirection vers login si non authentifié
-  useEffect(() => {
-    if (!mounted || loading) return;
-
-    if (!isAuthenticated) {
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <FaCheckCircle className="w-4 h-4 text-green-500" />;
+      case 'warning':
+        return <FaExclamationTriangle className="w-4 h-4 text-yellow-500" />;
+      case 'info':
+        return <FaBell className="w-4 h-4 text-blue-500" />;
+      default:
+        return <FaClock className="w-4 h-4 text-gray-500" />;
     }
-  }, [mounted, loading, isAuthenticated]);
+  };
 
-  // Afficher un loader pendant le chargement
-  if (!mounted || loading) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'success':
+        return 'bg-green-50 border-green-200';
+      case 'warning':
+        return 'bg-yellow-50 border-yellow-200';
+      case 'info':
+        return 'bg-blue-50 border-blue-200';
+      default:
+        return 'bg-gray-50 border-gray-200';
+    }
+  };
+
+  if (isLoading) {
     return (
-      <>
-        <Head>
-          <title>RH App - Chargement...</title>
-        </Head>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement de l'application...</p>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  // Si non authentifié, afficher le loader de redirection
-  if (!isAuthenticated) {
-    return (
-      <>
-        <Head>
-          <title>RH App - Redirection...</title>
-        </Head>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Redirection vers la connexion...</p>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  // Page d'accueil avec dashboard
-  return (
-    <>
-      <Head>
-        <title>RH App - Tableau de bord</title>
-      </Head>
       <Layout>
-        <div className="p-6">
-          {/* En-tête */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Bienvenue, {user?.username || 'Utilisateur'} !
-            </h1>
-            <p className="text-gray-600">
-              Gérez vos ressources humaines depuis ce tableau de bord centralisé.
-            </p>
-          </div>
-
-          {/* Statistiques rapides */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-blue-100 text-blue-600">
-                  <FaUsers className="text-xl" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Employés</p>
-                  <p className="text-2xl font-bold text-gray-900">--</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-green-100 text-green-600">
-                  <FaBuilding className="text-xl" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Départements</p>
-                  <p className="text-2xl font-bold text-gray-900">--</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
-                  <FaCalendarAlt className="text-xl" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Congés en cours</p>
-                  <p className="text-2xl font-bold text-gray-900">--</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-purple-100 text-purple-600">
-                  <FaMoneyCheckAlt className="text-xl" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Paie du mois</p>
-                  <p className="text-2xl font-bold text-gray-900">--</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Modules principaux */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Link href="/employes" className="group">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="flex items-center mb-4">
-                  <div className="p-3 rounded-full bg-blue-100 text-blue-600 group-hover:bg-blue-200 transition-colors">
-                    <FaUsers className="text-2xl" />
-                  </div>
-                  <h3 className="ml-4 text-xl font-semibold text-gray-900">Gestion des Employés</h3>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Consultez, ajoutez et gérez tous les employés de l'entreprise.
-                </p>
-                <div className="text-blue-600 font-medium group-hover:text-blue-700">
-                  Accéder →
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/departments" className="group">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="flex items-center mb-4">
-                  <div className="p-3 rounded-full bg-green-100 text-green-600 group-hover:bg-green-200 transition-colors">
-                    <FaBuilding className="text-2xl" />
-                  </div>
-                  <h3 className="ml-4 text-xl font-semibold text-gray-900">Départements</h3>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Organisez la structure de votre entreprise par départements.
-                </p>
-                <div className="text-green-600 font-medium group-hover:text-green-700">
-                  Accéder →
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/conges" className="group">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="flex items-center mb-4">
-                  <div className="p-3 rounded-full bg-yellow-100 text-yellow-600 group-hover:bg-yellow-200 transition-colors">
-                    <FaCalendarAlt className="text-2xl" />
-                  </div>
-                  <h3 className="ml-4 text-xl font-semibold text-gray-900">Gestion des Congés</h3>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Gérez les demandes de congés et les absences du personnel.
-                </p>
-                <div className="text-yellow-600 font-medium group-hover:text-yellow-700">
-                  Accéder →
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/paie" className="group">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="flex items-center mb-4">
-                  <div className="p-3 rounded-full bg-purple-100 text-purple-600 group-hover:bg-purple-200 transition-colors">
-                    <FaMoneyCheckAlt className="text-2xl" />
-                  </div>
-                  <h3 className="ml-4 text-xl font-semibold text-gray-900">Gestion de la Paie</h3>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Calculez et gérez les salaires et les bulletins de paie.
-                </p>
-                <div className="text-purple-600 font-medium group-hover:text-purple-700">
-                  Accéder →
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/users" className="group">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="flex items-center mb-4">
-                  <div className="p-3 rounded-full bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200 transition-colors">
-                    <FaUserCog className="text-2xl" />
-                  </div>
-                  <h3 className="ml-4 text-xl font-semibold text-gray-900">Utilisateurs</h3>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Gérez les comptes utilisateurs et les permissions d'accès.
-                </p>
-                <div className="text-indigo-600 font-medium group-hover:text-indigo-700">
-                  Accéder →
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/roles" className="group">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="flex items-center mb-4">
-                  <div className="p-3 rounded-full bg-red-100 text-red-600 group-hover:bg-red-200 transition-colors">
-                    <FaChartLine className="text-2xl" />
-                  </div>
-                  <h3 className="ml-4 text-xl font-semibold text-gray-900">Rôles & Permissions</h3>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Configurez les rôles et les permissions d'accès au système.
-                </p>
-                <div className="text-red-600 font-medium group-hover:text-red-700">
-                  Accéder →
-                </div>
-              </div>
-            </Link>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Chargement du tableau de bord...</p>
           </div>
         </div>
       </Layout>
-    </>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
+          <p className="text-gray-600 mt-2">
+            Bienvenue, {user?.firstName || user?.username} ! Voici un aperçu de votre activité.
+          </p>
+        </div>
+
+        {/* Statistiques principales */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-indigo-100">
+                <FaUsers className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Employés</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalEmployees}</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <span className="text-sm text-green-600 font-medium">
+                +{stats.activeEmployees} actifs
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-green-100">
+                <MdPerson className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Employés Actifs</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeEmployees}</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <span className="text-sm text-green-600 font-medium">
+                {((stats.activeEmployees / stats.totalEmployees) * 100).toFixed(1)}% taux d'activité
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-yellow-100">
+                <FaCalendarAlt className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Congés en Attente</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingLeaves}</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <span className="text-sm text-yellow-600 font-medium">
+                Nécessite votre attention
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-purple-100">
+                <FaMoneyCheckAlt className="w-6 h-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Masse Salariale</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.totalPayroll.toLocaleString('fr-FR')} €
+                </p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <span className="text-sm text-purple-600 font-medium">
+                Ce mois
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Actions rapides */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Actions rapides</h3>
+              </div>
+              <div className="p-6 space-y-4">
+                <Link
+                  href="/employes/nouveau"
+                  className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="p-2 rounded-full bg-green-100">
+                    <FaUsers className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-900">Ajouter un employé</p>
+                    <p className="text-xs text-gray-600">Créer un nouveau profil</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/conges/nouveau"
+                  className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="p-2 rounded-full bg-blue-100">
+                    <FaCalendarAlt className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-900">Demande de congé</p>
+                    <p className="text-xs text-gray-600">Soumettre une demande</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/paie/nouveau"
+                  className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="p-2 rounded-full bg-purple-100">
+                    <FaMoneyCheckAlt className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-900">Gestion de la paie</p>
+                    <p className="text-xs text-gray-600">Traiter les salaires</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/users/nouveau"
+                  className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="p-2 rounded-full bg-indigo-100">
+                    <MdPerson className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-900">Créer un utilisateur</p>
+                    <p className="text-xs text-gray-600">Nouveau compte système</p>
+                  </div>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Activités récentes */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Activités récentes</h3>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {stats.recentActivities.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className={`flex items-start p-4 rounded-lg border ${getStatusColor(activity.status)}`}
+                    >
+                      <div className="flex-shrink-0 mt-1">
+                        {getStatusIcon(activity.status)}
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <p className="text-sm font-medium text-gray-900">{activity.message}</p>
+                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 text-center">
+                  <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                    Voir toutes les activités →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Graphique de performance (placeholder) */}
+        <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900">Performance mensuelle</h3>
+          </div>
+          <div className="p-6">
+            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+              <div className="text-center">
+                <FaChartLine className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">Graphique de performance à venir</p>
+                <p className="text-sm text-gray-500">Intégration avec Chart.js ou Recharts</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Layout>
   );
 }

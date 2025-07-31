@@ -31,6 +31,8 @@ import {
   FaEye as FaEyeIcon
 } from 'react-icons/fa';
 import Link from 'next/link';
+import PhotoUpload from '../../../components/PhotoUpload';
+import SalaryDisplay from '../../../components/SalaryDisplay';
 
 interface UserDetails extends User {
   employee?: {
@@ -86,6 +88,8 @@ export default function EditUserPage() {
     roleId: '',
     employeeId: '',
     isActive: true,
+    photoUrl: '',
+    salary: undefined as number | undefined,
     firstName: '',
     lastName: '',
     phone: '',
@@ -131,6 +135,8 @@ export default function EditUserPage() {
         roleId: userData.roleId?.toString() || '',
         employeeId: userData.employeeId?.toString() || '',
         isActive: userData.isActive !== false,
+        photoUrl: userData.photoUrl || userData.employee?.photoUrl || '',
+        salary: userData.salary || userData.employee?.salary,
         firstName: userData.employee?.firstName || '',
         lastName: userData.employee?.lastName || '',
         phone: userData.employee?.phone || '',
@@ -149,10 +155,33 @@ export default function EditUserPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-    }));
+    
+    setForm(prev => {
+      const newForm = {
+        ...prev,
+        [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      };
+      
+      // Si le mot de passe est vidé, vider aussi la confirmation
+      if (name === 'password' && !value.trim()) {
+        newForm.confirmPassword = '';
+      }
+      
+      // Si la confirmation du mot de passe est vidée et qu'il y a un mot de passe, vider le mot de passe aussi
+      if (name === 'confirmPassword' && !value.trim() && prev.password.trim()) {
+        newForm.password = '';
+      }
+      
+      return newForm;
+    });
+  };
+
+  const handlePhotoChange = (photoUrl: string) => {
+    setForm(prev => ({ ...prev, photoUrl }));
+  };
+
+  const handleSalaryChange = (salary: number) => {
+    setForm(prev => ({ ...prev, salary }));
   };
 
   const validateForm = () => {
@@ -171,14 +200,29 @@ export default function EditUserPage() {
       return false;
     }
     
-    if (form.password && form.password !== form.confirmPassword) {
-      showError('Les mots de passe ne correspondent pas');
-      return false;
-    }
-    
-    if (form.password && form.password.length < 8) {
-      showError('Le mot de passe doit contenir au moins 8 caractères');
-      return false;
+    // Vérifier le mot de passe seulement s'il est fourni
+    if (form.password.trim()) {
+      // Si un mot de passe est fourni, la confirmation est obligatoire
+      if (!form.confirmPassword.trim()) {
+        showError('La confirmation du mot de passe est requise');
+        return false;
+      }
+      
+      if (form.password !== form.confirmPassword) {
+        showError('Les mots de passe ne correspondent pas');
+        return false;
+      }
+      
+      if (form.password.length < 8) {
+        showError('Le mot de passe doit contenir au moins 8 caractères');
+        return false;
+      }
+    } else {
+      // Si le mot de passe est vide, s'assurer que la confirmation est aussi vide
+      if (form.confirmPassword.trim()) {
+        showError('Veuillez vider le champ de confirmation du mot de passe si vous ne souhaitez pas changer le mot de passe');
+        return false;
+      }
     }
     
     return true;
@@ -187,7 +231,9 @@ export default function EditUserPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
     
     const loadingToast = showLoading('Enregistrement des modifications...');
     setSaving(true);
@@ -199,6 +245,8 @@ export default function EditUserPage() {
         roleId: parseInt(form.roleId),
         employeeId: form.employeeId ? parseInt(form.employeeId) : undefined,
         isActive: form.isActive,
+        photoUrl: form.photoUrl,
+        salary: form.salary,
         // Informations employé
         firstName: form.firstName,
         lastName: form.lastName,
@@ -214,15 +262,15 @@ export default function EditUserPage() {
         updateData.password = form.password;
       }
 
-      await userService.updateUser(parseInt(id as string), updateData);
+      const result = await userService.updateUser(parseInt(id as string), updateData);
       
       dismiss(loadingToast);
       showSuccess('Utilisateur modifié avec succès');
       router.push(`/users/${id}`);
     } catch (err) {
+      console.error('Erreur lors de la modification:', err);
       dismiss(loadingToast);
       showError('Erreur lors de la modification');
-      console.error(err);
     } finally {
       setSaving(false);
     }
@@ -349,25 +397,37 @@ export default function EditUserPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirmer le mot de passe
+                  Confirmer le mot de passe {form.password.trim() && <span className="text-red-500">*</span>}
                 </label>
                 <div className="relative">
                   <input 
                     name="confirmPassword" 
                     value={form.confirmPassword} 
                     onChange={handleChange} 
-                    placeholder="Confirmer le mot de passe" 
+                    placeholder={form.password.trim() ? "Confirmer le mot de passe" : "Laissez vide si vous ne changez pas le mot de passe"}
                     type={showConfirmPassword ? 'text' : 'password'}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                    disabled={!form.password.trim()}
+                    className={`w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${!form.password.trim() ? 'bg-gray-100 text-gray-500' : ''}`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={!form.password.trim()}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
                   >
                     {showConfirmPassword ? <FaEyeSlashIcon /> : <FaEyeIcon />}
                   </button>
                 </div>
+                {form.password.trim() && (
+                  <p className="text-sm text-red-500 mt-1 font-medium">
+                    ⚠️ La confirmation est obligatoire si vous changez le mot de passe
+                  </p>
+                )}
+                {!form.password.trim() && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    💡 Laissez les deux champs vides si vous ne souhaitez pas changer le mot de passe
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -437,6 +497,29 @@ export default function EditUserPage() {
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Photo de l'utilisateur */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Photo de profil</label>
+                <PhotoUpload
+                  currentPhotoUrl={form.photoUrl}
+                  onPhotoChange={handlePhotoChange}
+                  employeeName={`${form.firstName} ${form.lastName}`}
+                  disabled={saving}
+                />
+              </div>
+
+              {/* Informations salariales */}
+              <div className="md:col-span-2">
+                <SalaryDisplay
+                  salary={form.salary}
+                  onSalaryChange={handleSalaryChange}
+                  editable={true}
+                  disabled={saving}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Prénom

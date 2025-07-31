@@ -34,7 +34,7 @@ export default function LoginPage() {
       }
       window.location.href = targetUrl;
     }
-  }, [mounted, authLoading, isAuthenticated, user]);
+  }, [mounted, authLoading, isAuthenticated]); // Retirer user des dépendances
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

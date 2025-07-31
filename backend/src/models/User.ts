@@ -9,6 +9,8 @@ interface UserAttributes {
   password: string;
   roleId: number;
   isActive?: boolean;
+  photoUrl?: string;
+  salary?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -23,6 +25,8 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public password!: string;
   public roleId!: number;
   public isActive?: boolean;
+  public photoUrl?: string;
+  public salary?: number;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
 
@@ -66,6 +70,16 @@ User.init(
       type: DataTypes.BOOLEAN,
       allowNull: true,
       defaultValue: true,
+    },
+    photoUrl: {
+      type: DataTypes.STRING(10000),
+      allowNull: true,
+      comment: 'URL de la photo de profil (peut contenir des données base64)',
+    },
+    salary: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'Salaire brut annuel en euros',
     },
   },
   {

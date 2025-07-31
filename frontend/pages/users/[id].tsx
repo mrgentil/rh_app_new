@@ -25,9 +25,11 @@ import {
   FaCog,
   FaBuilding,
   FaPhone,
-  FaMapMarkerAlt
+  FaMapMarkerAlt,
+  FaEuroSign
 } from 'react-icons/fa';
 import Link from 'next/link';
+import SalaryDisplay from '../../components/SalaryDisplay';
 
 interface UserDetails extends User {
   employee?: {
@@ -260,8 +262,18 @@ export default function UserDetailPage() {
             {/* Carte utilisateur */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <FaUser className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center">
+                  {user.photoUrl ? (
+                    <img
+                      src={user.photoUrl}
+                      alt={user.username}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                      <FaUser className="w-8 h-8 text-white" />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">{user.username}</h2>
@@ -269,6 +281,19 @@ export default function UserDetailPage() {
                   <div className="mt-2">
                     {getStatusBadge(user.isActive)}
                   </div>
+                  {user.salary && (
+                    <div className="flex items-center mt-2 text-green-600">
+                      <FaEuroSign className="mr-1" />
+                      <span className="font-semibold">
+                        {new Intl.NumberFormat('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR',
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        }).format(user.salary)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -298,6 +323,18 @@ export default function UserDetailPage() {
                         {getStatusBadge(user.isActive)}
                       </div>
                     </div>
+                    {user.photoUrl && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Photo de profil</label>
+                        <div className="mt-2">
+                          <img
+                            src={user.photoUrl}
+                            alt={user.username}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -335,6 +372,42 @@ export default function UserDetailPage() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Informations salariales */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <FaEuroSign className="text-green-600" />
+                Informations salariales
+              </h3>
+              {user.salary ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Salaire annuel brut</label>
+                    <p className="text-2xl font-bold text-green-600">
+                      {new Intl.NumberFormat('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      }).format(user.salary)}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Salaire mensuel brut</label>
+                    <p className="text-lg text-gray-700">
+                      {new Intl.NumberFormat('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      }).format(user.salary / 12)}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-500">Aucun salaire défini</p>
+              )}
             </div>
 
             {/* Informations de sécurité */}

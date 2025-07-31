@@ -7,6 +7,8 @@ import { employeeService, CreateEmployeeData } from '../../services/employeeServ
 import { useAuth } from '../../hooks/useAuth';
 import { roleService, Role } from '../../services/roleService';
 import { useToast } from '../../hooks/useToast';
+import PhotoUpload from '../../components/PhotoUpload';
+import SalaryDisplay from '../../components/SalaryDisplay';
 
 export default function NouveauEmploye() {
   const router = useRouter();
@@ -21,6 +23,8 @@ export default function NouveauEmploye() {
     birthDate: '',
     hireDate: '',
     status: 'actif',
+    photoUrl: '',
+    salary: undefined,
     jobTitleId: undefined,
     departmentId: undefined,
     managerId: undefined,
@@ -55,6 +59,14 @@ export default function NouveauEmploye() {
         console.error('Erreur lors de la mise à jour du rôle par défaut:', error);
       }
     }
+  };
+
+  const handlePhotoChange = (photoUrl: string) => {
+    setForm(prev => ({ ...prev, photoUrl }));
+  };
+
+  const handleSalaryChange = (salary: number) => {
+    setForm(prev => ({ ...prev, salary }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -206,6 +218,27 @@ export default function NouveauEmploye() {
                   value={form.address}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Photo de l'employé */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Photo de profil</label>
+                <PhotoUpload
+                  currentPhotoUrl={form.photoUrl}
+                  onPhotoChange={handlePhotoChange}
+                  employeeName={`${form.firstName} ${form.lastName}`}
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Informations salariales */}
+              <div className="md:col-span-2">
+                <SalaryDisplay
+                  salary={form.salary}
+                  onSalaryChange={handleSalaryChange}
+                  editable={true}
+                  disabled={loading}
                 />
               </div>
 

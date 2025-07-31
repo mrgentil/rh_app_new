@@ -4,6 +4,7 @@ import { FaUserPlus, FaEdit, FaTrash, FaEye, FaSearch, FaFilter, FaBuilding, FaB
 import Link from 'next/link';
 import { useAuth } from '../../hooks/useAuth';
 import { employeeService, downloadUtils, Employee } from '../../services/employeeService';
+import SimpleSalaryStats from '../../components/SimpleSalaryStats';
 
 export default function EmployesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -206,6 +207,11 @@ export default function EmployesPage() {
             </div>
           </div>
 
+          {/* Statistiques salariales */}
+          <div className="mb-8">
+            <SimpleSalaryStats employees={employees} />
+          </div>
+
           {/* Filters */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -262,14 +268,34 @@ export default function EmployesPage() {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-lg">
-                          {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
-                        </span>
+                      <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center">
+                        {emp.photoUrl ? (
+                          <img
+                            src={emp.photoUrl}
+                            alt={`${emp.firstName} ${emp.lastName}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                            <span className="text-white font-semibold text-lg">
+                              {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900 text-lg">{emp.firstName} {emp.lastName}</h3>
                         <p className="text-sm text-gray-600">{emp.JobTitle?.title || 'Poste non défini'}</p>
+                        {emp.salary && (
+                          <p className="text-xs text-green-600 font-medium">
+                            {new Intl.NumberFormat('fr-FR', {
+                              style: 'currency',
+                              currency: 'EUR',
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                            }).format(emp.salary)}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(emp.status)}`}>

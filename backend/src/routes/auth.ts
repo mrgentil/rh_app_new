@@ -19,7 +19,7 @@ const authenticateToken = async (req: any, res: any, next: any) => {
     const user = await User.findByPk(decoded.id, {
       include: [
         { model: Role, attributes: ['name', 'permissions'] },
-        { model: Employee, attributes: ['firstName', 'lastName', 'email', 'status'] }
+        { model: Employee, attributes: ['firstName', 'lastName', 'email', 'status', 'photoUrl'] }
       ]
     });
     
@@ -47,7 +47,7 @@ router.post('/login', async (req, res) => {
       where: { username },
       include: [
         { model: Role, attributes: ['name', 'permissions'] },
-        { model: Employee, attributes: ['firstName', 'lastName', 'email', 'status'] }
+        { model: Employee, attributes: ['firstName', 'lastName', 'email', 'status', 'photoUrl'] }
       ]
     });
     
@@ -87,11 +87,15 @@ router.post('/login', async (req, res) => {
         permissions: (user as any).Role?.permissions,
         employeeId: user.employeeId,
         isActive: user.isActive,
+        photoUrl: user.photoUrl || (user as any).Employee?.photoUrl,
+        firstName: (user as any).Employee?.firstName,
+        lastName: (user as any).Employee?.lastName,
         employee: (user as any).Employee ? {
           firstName: (user as any).Employee.firstName,
           lastName: (user as any).Employee.lastName,
           email: (user as any).Employee.email,
-          status: (user as any).Employee.status
+          status: (user as any).Employee.status,
+          photoUrl: (user as any).Employee.photoUrl
         } : null
       }
     });
@@ -105,35 +109,52 @@ router.post('/login', async (req, res) => {
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const userId = (req as any).user.id;
+    console.log('🔍 Récupération utilisateur ID:', userId);
     
     // Récupérer l'utilisateur avec ses relations
     const user = await User.findByPk(userId, {
       include: [
         { model: Role, attributes: ['name', 'permissions'] },
-        { model: Employee, attributes: ['firstName', 'lastName', 'email', 'status'] }
+        { model: Employee, attributes: ['firstName', 'lastName', 'email', 'status', 'photoUrl'] }
       ]
     });
     
     if (!user) {
+      console.log('❌ Utilisateur non trouvé');
       return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
     
-    res.json({
+    const responseData = {
       id: user.id,
       username: user.username,
       role: (user as any).Role?.name,
       permissions: (user as any).Role?.permissions,
       employeeId: user.employeeId,
       isActive: user.isActive,
+      photoUrl: user.photoUrl || (user as any).Employee?.photoUrl,
+      firstName: (user as any).Employee?.firstName,
+      lastName: (user as any).Employee?.lastName,
       employee: (user as any).Employee ? {
         firstName: (user as any).Employee.firstName,
         lastName: (user as any).Employee.lastName,
         email: (user as any).Employee.email,
-        status: (user as any).Employee.status
+        status: (user as any).Employee.status,
+        photoUrl: (user as any).Employee.photoUrl
       } : null
+    };
+    
+    console.log('📤 Données utilisateur envoyées:', {
+      id: responseData.id,
+      username: responseData.username,
+      photoUrl: responseData.photoUrl,
+      firstName: responseData.firstName,
+      lastName: responseData.lastName,
+      employeePhotoUrl: responseData.employee?.photoUrl
     });
+    
+    res.json(responseData);
   } catch (error) {
-    console.error('Erreur récupération utilisateur:', error);
+    console.error('❌ Erreur récupération utilisateur:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

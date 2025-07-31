@@ -13,13 +13,7 @@ export default function App({ Component, pageProps, router }: AppProps) {
   return (
     <AuthProvider>
       <ToastProvider>
-        {isPublic ? (
-          <Component {...pageProps} />
-        ) : (
-          <ProtectedRoute>
-            <Component {...pageProps} />
-          </ProtectedRoute>
-        )}
+        <Component {...pageProps} />
       </ToastProvider>
     </AuthProvider>
   );

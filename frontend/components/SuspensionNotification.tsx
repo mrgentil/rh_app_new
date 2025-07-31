@@ -7,10 +7,10 @@ export const SuspensionNotification = () => {
   const { showError } = useToast();
 
   useEffect(() => {
+    if (!user) return;
+    
     // Vérification périodique du statut (toutes les 30 secondes)
     const checkStatus = async () => {
-      if (!user) return;
-
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
           credentials: 'include'
@@ -34,7 +34,7 @@ export const SuspensionNotification = () => {
 
     const interval = setInterval(checkStatus, 30000); // 30 secondes
     return () => clearInterval(interval);
-  }, [user, logout, showError]);
+  }, [user?.isActive]); // Seulement dépendre de user.isActive
 
   return null; // Ce composant ne rend rien visuellement
 }; 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
-import { useAuth } from '../../hooks/useAuth';
+import { usePageAuth } from '../../hooks/usePageAuth';
 import { userService, User, UserStats } from '../../services/userService';
 import { roleService } from '../../services/roleService';
 import { departmentService, Department } from '../../services/departmentService';
@@ -20,7 +20,8 @@ import {
   FaUserPlus,
   FaChartBar,
   FaFilter,
-  FaDownload
+  FaDownload,
+  FaEuroSign
 } from 'react-icons/fa';
 
 export default function UsersManagementPage() {
@@ -64,36 +65,31 @@ export default function UsersManagementPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, authLoading, pageReady } = usePageAuth({ requiredRole: 'Admin' });
   const { showSuccess, showError, showLoading, dismiss } = useToast();
 
   useEffect(() => {
-    // Attendre que l'authentification soit terminée
-    if (authLoading) {
-      return;
-    }
-
-    if (!user) {
-      console.log('No user found, redirecting to login');
-      router.push('/login');
-      return;
-    }
-
-    if (user?.role !== 'Admin') {
-      console.log('User is not Admin, redirecting to unauthorized');
-      router.push('/unauthorized');
-      return;
-    }
-
-    // Charger les données seulement si l'utilisateur est Admin et que les données ne sont pas encore chargées
-    if (!dataLoaded) {
-      console.log('User is Admin, fetching data');
+    // Reset fetchingRef quand la page se charge
+    fetchingRef.current = false;
+    
+    // Charger les données seulement si la page est prête et que les données ne sont pas encore chargées
+    if (pageReady && !dataLoaded) {
+      console.log('Page ready, fetching data');
       fetchData();
     }
-  }, [user, dataLoaded, authLoading]);
+  }, [pageReady, dataLoaded]);
+
+  // Reset dataLoaded quand on revient sur la page - version simplifiée
+  useEffect(() => {
+    // Reset au montage du composant
+    setDataLoaded(false);
+    fetchingRef.current = false;
+  }, []); // Seulement au montage
 
   useEffect(() => {
-    filterUsers();
+    if (users.length > 0) {
+      filterUsers();
+    }
   }, [users, searchTerm, selectedRole, statusFilter]);
 
   const fetchData = async () => {
@@ -431,6 +427,9 @@ export default function UsersManagementPage() {
                       Rôle
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Salaire
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Statut
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -446,10 +445,20 @@ export default function UsersManagementPage() {
                   <tr key={user.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">
-                            {user.username.charAt(0).toUpperCase()}
-                          </span>
+                        <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
+                          {user.photoUrl ? (
+                            <img
+                              src={user.photoUrl}
+                              alt={user.username}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">
+                                {user.username.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{user.username}</div>
@@ -464,6 +473,23 @@ export default function UsersManagementPage() {
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {user.roleName}
                       </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {user.salary ? (
+                          <div className="flex items-center text-green-600">
+                            <FaEuroSign className="mr-1 text-xs" />
+                            <span className="text-sm font-medium">
+                              {new Intl.NumberFormat('fr-FR', {
+                                style: 'currency',
+                                currency: 'EUR',
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0,
+                              }).format(user.salary)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">Non défini</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(user.isActive)}

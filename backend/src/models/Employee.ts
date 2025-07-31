@@ -15,6 +15,7 @@ interface EmployeeAttributes {
   managerId?: number; // Auto-relation pour la hiérarchie
   status: string; // actif, suspendu, démissionnaire, licencié
   photoUrl?: string;
+  salary?: number; // Salaire brut annuel
   contractEndDate?: Date; // Pour les stagiaires et contrats temporaires
   employeeType?: string; // permanent, stagiaire, cdi, cdd
   createdAt?: Date;
@@ -37,6 +38,7 @@ export class Employee extends Model<EmployeeAttributes, EmployeeCreationAttribut
   public managerId?: number;
   public status!: string;
   public photoUrl?: string;
+  public salary?: number;
   public contractEndDate?: Date;
   public employeeType?: string;
   public readonly createdAt?: Date;
@@ -116,6 +118,11 @@ Employee.init(
     photoUrl: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    salary: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'Salaire brut annuel en euros',
     },
     contractEndDate: {
       type: DataTypes.DATE,

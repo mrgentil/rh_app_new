@@ -9,6 +9,8 @@ export interface User {
   employeeId?: number;
   employeeName?: string;
   isActive: boolean;
+  photoUrl?: string;
+  salary?: number;
   createdAt: string;
   updatedAt: string;
   // Informations employé complètes
@@ -22,6 +24,8 @@ export interface User {
     birthDate?: string;
     hireDate?: string;
     status: string;
+    photoUrl?: string;
+    salary?: number;
     jobTitle?: {
       id: number;
       name: string;
@@ -42,8 +46,11 @@ export interface User {
 export interface CreateUserData {
   username: string;
   email: string;
+  password?: string;
   roleId: number;
   employeeId?: number;
+  photoUrl?: string;
+  salary?: number;
   // Informations employé
   firstName?: string;
   lastName?: string;
@@ -57,9 +64,12 @@ export interface CreateUserData {
 export interface UpdateUserData {
   username?: string;
   email?: string;
+  password?: string;
   roleId?: number;
   employeeId?: number;
   isActive?: boolean;
+  photoUrl?: string;
+  salary?: number;
   // Informations employé
   firstName?: string;
   lastName?: string;
@@ -194,6 +204,17 @@ class UserService {
     // Cette fonction nécessiterait un endpoint backend pour récupérer les employés sans compte
     // Pour l'instant, on retourne un tableau vide
     return [];
+  }
+
+  // Récupérer les rôles disponibles
+  async getAvailableRoles(): Promise<any[]> {
+    try {
+      const response = await this.request<any[]>('/roles');
+      return response;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des rôles:', error);
+      throw new Error('Impossible de récupérer la liste des rôles');
+    }
   }
 
   // Valider les données de création d'utilisateur

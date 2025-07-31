@@ -14,6 +14,8 @@ export interface Employee {
   birthDate: string;
   hireDate: string;
   status: string;
+  photoUrl?: string;
+  salary?: number;
   jobTitleId?: number;
   departmentId?: number;
   managerId?: number;
@@ -54,6 +56,8 @@ export interface CreateEmployeeData {
   birthDate: string;
   hireDate: string;
   status: string;
+  photoUrl?: string;
+  salary?: number;
   jobTitleId?: number;
   departmentId?: number;
   managerId?: number;

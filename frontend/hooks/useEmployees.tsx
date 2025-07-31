@@ -97,7 +97,7 @@ export function useEmployees(): UseEmployeesReturn {
   // Charger les employés au montage du composant
   useEffect(() => {
     fetchEmployees();
-  }, [fetchEmployees]);
+  }, []); // Retirer fetchEmployees des dépendances
 
   return {
     employees,

@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
 import { useAuth } from '../../hooks/useAuth';
-import { FaEdit, FaTrash, FaArrowLeft, FaEnvelope, FaPhone, FaMapMarkerAlt, FaBuilding, FaBriefcase, FaCalendarAlt, FaUser, FaIdCard, FaClock, FaBirthdayCake, FaDownload } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaArrowLeft, FaEnvelope, FaPhone, FaMapMarkerAlt, FaBuilding, FaBriefcase, FaCalendarAlt, FaUser, FaIdCard, FaClock, FaBirthdayCake, FaDownload, FaEuroSign } from 'react-icons/fa';
 import Link from 'next/link';
 import { employeeService, downloadUtils, Employee } from '../../services/employeeService';
+import SalaryDisplay from '../../components/SalaryDisplay';
 
 export default function EmployeeDetailsPage() {
   const [employee, setEmployee] = useState<Employee | null>(null);
@@ -154,10 +155,20 @@ export default function EmployeeDetailsPage() {
           
           <div className="flex justify-between items-start">
             <div className="flex items-center space-x-6">
-              <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">
-                  {employee.firstName.charAt(0)}{employee.lastName.charAt(0)}
-                </span>
+              <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center">
+                {employee.photoUrl ? (
+                  <img
+                    src={employee.photoUrl}
+                    alt={`${employee.firstName} ${employee.lastName}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                    <span className="text-white font-bold text-2xl">
+                      {employee.firstName.charAt(0)}{employee.lastName.charAt(0)}
+                    </span>
+                  </div>
+                )}
               </div>
               <div>
                 <h1 className="text-4xl font-bold text-gray-800 mb-2">
@@ -169,6 +180,19 @@ export default function EmployeeDetailsPage() {
                 <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(employee.status)}`}>
                   {employee.status}
                 </span>
+                {employee.salary && (
+                  <div className="flex items-center mt-2 text-green-600">
+                    <FaEuroSign className="mr-1" />
+                    <span className="font-semibold">
+                      {new Intl.NumberFormat('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      }).format(employee.salary)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -296,6 +320,22 @@ export default function EmployeeDetailsPage() {
                 </div>
               </div>
             </div>
+
+            {/* Informations salariales */}
+            {employee.salary && (
+              <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <FaEuroSign className="w-5 h-5 mr-2 text-green-600" />
+                  Informations salariales
+                </h2>
+                <SalaryDisplay
+                  salary={employee.salary}
+                  onSalaryChange={() => {}} // Lecture seule
+                  editable={false}
+                  disabled={true}
+                />
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}

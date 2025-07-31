@@ -30,6 +30,8 @@ export interface UpdateUserData {
   roleId?: number;
   employeeId?: number;
   isActive?: boolean;
+  photoUrl?: string;
+  salary?: number;
   // Informations employé
   firstName?: string;
   lastName?: string;
@@ -49,6 +51,8 @@ export interface UserWithDetails {
   employeeId?: number;
   employeeName?: string;
   isActive: boolean;
+  photoUrl?: string;
+  salary?: number;
   createdAt: Date;
   updatedAt: Date;
   // Informations employé complètes
@@ -62,6 +66,8 @@ export interface UserWithDetails {
     birthDate?: string;
     hireDate?: string;
     status: string;
+    photoUrl?: string;
+    salary?: number;
   };
   // Informations rôle complètes
   role?: {
@@ -148,10 +154,11 @@ class UserService {
   async getAllUsers(): Promise<UserWithDetails[]> {
     try {
       const users = await User.findAll({
+        attributes: ['id', 'username', 'email', 'roleId', 'employeeId', 'isActive', 'photoUrl', 'salary', 'createdAt', 'updatedAt'],
         include: [
           {
             model: Employee,
-            attributes: ['id', 'firstName', 'lastName', 'email', 'phone', 'address', 'birthDate', 'hireDate', 'status']
+            attributes: ['id', 'firstName', 'lastName', 'email', 'phone', 'address', 'birthDate', 'hireDate', 'status', 'photoUrl', 'salary']
           },
           {
             model: Role,
@@ -176,6 +183,8 @@ class UserService {
             ? `${employee.firstName} ${employee.lastName}`
             : undefined,
           isActive: user.isActive !== false,
+          photoUrl: user.photoUrl || employee?.photoUrl,
+          salary: user.salary || employee?.salary,
           createdAt: user.createdAt!,
           updatedAt: user.updatedAt!,
           // Informations employé complètes
@@ -188,7 +197,9 @@ class UserService {
             address: employee.address,
             birthDate: employee.birthDate,
             hireDate: employee.hireDate,
-            status: employee.status
+            status: employee.status,
+            photoUrl: employee.photoUrl,
+            salary: employee.salary
           } : undefined,
           // Informations rôle complètes
           role: role ? {
@@ -208,10 +219,11 @@ class UserService {
   async getUserById(id: number): Promise<UserWithDetails | null> {
     try {
       const user = await User.findByPk(id, {
+        attributes: ['id', 'username', 'email', 'roleId', 'employeeId', 'isActive', 'photoUrl', 'salary', 'createdAt', 'updatedAt'],
         include: [
           {
             model: Employee,
-            attributes: ['id', 'firstName', 'lastName', 'email', 'phone', 'address', 'birthDate', 'hireDate', 'status']
+            attributes: ['id', 'firstName', 'lastName', 'email', 'phone', 'address', 'birthDate', 'hireDate', 'status', 'photoUrl', 'salary']
           },
           {
             model: Role,
@@ -225,38 +237,42 @@ class UserService {
       const employee = (user as any).Employee;
       const role = (user as any).Role;
 
-      return {
-        id: user.id,
-        username: user.username,
-        email: employee?.email || user.username,
-        roleId: user.roleId,
-        roleName: role?.name || 'Inconnu',
-        employeeId: user.employeeId,
-        employeeName: employee 
-          ? `${employee.firstName} ${employee.lastName}`
-          : undefined,
-        isActive: user.isActive !== false,
-        createdAt: user.createdAt!,
-        updatedAt: user.updatedAt!,
-        // Informations employé complètes
-        employee: employee ? {
-          id: employee.id,
-          firstName: employee.firstName,
-          lastName: employee.lastName,
-          email: employee.email,
-          phone: employee.phone,
-          address: employee.address,
-          birthDate: employee.birthDate,
-          hireDate: employee.hireDate,
-          status: employee.status
-        } : undefined,
-        // Informations rôle complètes
-        role: role ? {
-          id: role.id,
-          name: role.name,
-          permissions: role.permissions
-        } : undefined
-      };
+              return {
+          id: user.id,
+          username: user.username,
+          email: employee?.email || user.username,
+          roleId: user.roleId,
+          roleName: role?.name || 'Inconnu',
+          employeeId: user.employeeId,
+          employeeName: employee 
+            ? `${employee.firstName} ${employee.lastName}`
+            : undefined,
+          isActive: user.isActive !== false,
+          photoUrl: user.photoUrl || employee?.photoUrl,
+          salary: user.salary || employee?.salary,
+          createdAt: user.createdAt!,
+          updatedAt: user.updatedAt!,
+          // Informations employé complètes
+          employee: employee ? {
+            id: employee.id,
+            firstName: employee.firstName,
+            lastName: employee.lastName,
+            email: employee.email,
+            phone: employee.phone,
+            address: employee.address,
+            birthDate: employee.birthDate,
+            hireDate: employee.hireDate,
+            status: employee.status,
+            photoUrl: employee.photoUrl,
+            salary: employee.salary
+          } : undefined,
+          // Informations rôle complètes
+          role: role ? {
+            id: role.id,
+            name: role.name,
+            permissions: role.permissions
+          } : undefined
+        };
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'utilisateur:', error);
       throw error;
@@ -299,6 +315,8 @@ class UserService {
       if (userData.roleId) userUpdateData.roleId = userData.roleId;
       if (userData.employeeId) userUpdateData.employeeId = userData.employeeId;
       if (userData.isActive !== undefined) userUpdateData.isActive = userData.isActive;
+      if (userData.photoUrl !== undefined) userUpdateData.photoUrl = userData.photoUrl;
+      if (userData.salary !== undefined) userUpdateData.salary = userData.salary;
 
       // Données employé
       if (userData.firstName) employeeUpdateData.firstName = userData.firstName;
@@ -308,6 +326,8 @@ class UserService {
       if (userData.birthDate) employeeUpdateData.birthDate = userData.birthDate;
       if (userData.hireDate) employeeUpdateData.hireDate = userData.hireDate;
       if (userData.status) employeeUpdateData.status = userData.status;
+      if (userData.photoUrl !== undefined) employeeUpdateData.photoUrl = userData.photoUrl;
+      if (userData.salary !== undefined) employeeUpdateData.salary = userData.salary;
 
       // Mettre à jour l'utilisateur
       await user.update(userUpdateData);
