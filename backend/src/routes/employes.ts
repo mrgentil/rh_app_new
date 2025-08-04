@@ -204,8 +204,27 @@ router.post('/', authenticateJWT, authorizeRoles('Admin', 'RH'), async (req: Aut
       }
     }
 
+    // Générer le matricule automatiquement
+    const lastEmployee = await Employee.findOne({
+      order: [['id', 'DESC']]
+    });
+    
+    let nextMatricule = 'EMP001';
+    if (lastEmployee && lastEmployee.matricule) {
+      const lastNumber = parseInt(lastEmployee.matricule.replace('EMP', ''));
+      nextMatricule = `EMP${String(lastNumber + 1).padStart(3, '0')}`;
+    }
+
+    // Préparer les données de l'employé
+    const employeeData = {
+      ...req.body,
+      matricule: nextMatricule,
+      // S'assurer que managerId est null si non spécifié pour éviter l'erreur de contrainte
+      managerId: req.body.managerId || null
+    };
+
     // Créer l'employé
-    const employee = await Employee.create(req.body);
+    const employee = await Employee.create(employeeData);
     
     // Déterminer le rôle par défaut selon le type d'employé
     let defaultRoleId = null;
@@ -246,6 +265,7 @@ router.post('/', authenticateJWT, authorizeRoles('Admin', 'RH'), async (req: Aut
         console.log(`✅ Compte utilisateur créé pour ${employee.email}`);
         console.log(`🔑 Mot de passe temporaire: ${tempPassword}`);
         console.log(`👤 Rôle attribué: ${role.name}`);
+        console.log(`🆔 Matricule: ${employee.matricule}`);
       }
     }
     
@@ -259,7 +279,7 @@ router.post('/', authenticateJWT, authorizeRoles('Admin', 'RH'), async (req: Aut
         await Notification.create({
           employeeId: admin.employeeId,
           type: 'EMPLOYE',
-          message: `Nouvel employé créé : ${employee.firstName} ${employee.lastName}`,
+          message: `Nouvel employé créé : ${employee.firstName} ${employee.lastName} (${employee.matricule})`,
           isRead: false
         });
       }
@@ -271,7 +291,9 @@ router.post('/', authenticateJWT, authorizeRoles('Admin', 'RH'), async (req: Aut
     
     res.status(201).json(employee);
   } catch (error) {
-    res.status(400).json({ error: 'Erreur lors de la création de l\'employé', details: error });
+    console.error('Erreur création employé:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    res.status(400).json({ error: "Erreur lors de la création de l'employé", details: message });
   }
 });
 

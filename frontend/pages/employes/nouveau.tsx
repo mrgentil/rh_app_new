@@ -31,6 +31,12 @@ export default function NouveauEmploye() {
     roleId: undefined,
     contractEndDate: '',
     employeeType: 'permanent',
+    city: '',
+    postalCode: '',
+    country: 'France',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    emergencyContactRelationship: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -219,6 +225,79 @@ export default function NouveauEmploye() {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ville</label>
+                <input
+                  name="city"
+                  value={form.city}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Code postal</label>
+                <input
+                  name="postalCode"
+                  value={form.postalCode}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Pays</label>
+                <input
+                  name="country"
+                  value={form.country}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Section Contact d'urgence */}
+              <div className="md:col-span-2">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Contact d'urgence</h3>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nom du contact</label>
+                <input
+                  name="emergencyContactName"
+                  value={form.emergencyContactName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone du contact</label>
+                <input
+                  name="emergencyContactPhone"
+                  value={form.emergencyContactPhone}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Relation avec le contact</label>
+                <select
+                  name="emergencyContactRelationship"
+                  value={form.emergencyContactRelationship}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Sélectionner une relation</option>
+                  <option value="Conjoint">Conjoint</option>
+                  <option value="Parent">Parent</option>
+                  <option value="Enfant">Enfant</option>
+                  <option value="Frère/Sœur">Frère/Sœur</option>
+                  <option value="Ami">Ami</option>
+                  <option value="Autre">Autre</option>
+                </select>
               </div>
 
               {/* Photo de l'employé */}

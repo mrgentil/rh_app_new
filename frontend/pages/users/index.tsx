@@ -65,7 +65,7 @@ export default function UsersManagementPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   const router = useRouter();
-  const { user, authLoading, pageReady } = usePageAuth({ requiredRole: 'Admin' });
+  const { user, authLoading, pageReady } = usePageAuth({ requiredRoles: ['Admin', 'RH', 'Manager'] });
   const { showSuccess, showError, showLoading, dismiss } = useToast();
 
   useEffect(() => {

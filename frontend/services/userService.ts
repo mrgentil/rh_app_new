@@ -51,14 +51,24 @@ export interface CreateUserData {
   employeeId?: number;
   photoUrl?: string;
   salary?: number;
-  // Informations employé
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
+  // Informations employé obligatoires
+  firstName: string;
+  lastName: string;
+  phone: string;
+  departmentId: number;
+  jobTitleId: number;
+  // Informations employé optionnelles
   address?: string;
   birthDate?: string;
   hireDate?: string;
   status?: string;
+  managerId?: number;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
 }
 
 export interface UpdateUserData {
@@ -78,6 +88,16 @@ export interface UpdateUserData {
   birthDate?: string;
   hireDate?: string;
   status?: string;
+  // Informations supplémentaires
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
+  managerId?: number;
+  departmentId?: number;
+  jobTitleId?: number;
 }
 
 export interface UserStats {

@@ -6,6 +6,7 @@ const API_BASE_URL = '/api';
 // Types
 export interface Employee {
   id: number;
+  matricule: string; // Nouveau champ matricule
   firstName: string;
   lastName: string;
   email: string;
@@ -21,6 +22,12 @@ export interface Employee {
   managerId?: number;
   contractEndDate?: string;
   employeeType?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
   Department?: {
     id: number;
     name: string;
@@ -64,6 +71,12 @@ export interface CreateEmployeeData {
   roleId?: number; // ID du rôle pour créer un compte utilisateur
   contractEndDate?: string;
   employeeType?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
 }
 
 export interface UpdateEmployeeData extends Partial<CreateEmployeeData> {}

@@ -40,6 +40,16 @@ export interface UpdateUserData {
   birthDate?: string;
   hireDate?: string;
   status?: string;
+  // Informations supplémentaires
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
+  managerId?: number;
+  departmentId?: number;
+  jobTitleId?: number;
 }
 
 export interface UserWithDetails {
@@ -109,7 +119,16 @@ class UserService {
       if (userData.address) employeeData.address = userData.address;
       if (userData.birthDate) employeeData.birthDate = userData.birthDate;
       if (userData.hireDate) employeeData.hireDate = userData.hireDate;
-      if (userData.managerId) employeeData.managerId = userData.managerId;
+      
+      // Vérifier que le managerId existe avant de l'assigner
+      if (userData.managerId) {
+        const managerExists = await Employee.findByPk(userData.managerId);
+        if (managerExists) {
+          employeeData.managerId = userData.managerId;
+        } else {
+          console.warn(`Manager avec l'ID ${userData.managerId} n'existe pas, managerId ignoré`);
+        }
+      }
 
       const employee = await Employee.create(employeeData);
       const employeeId = employee.id;
@@ -328,6 +347,17 @@ class UserService {
       if (userData.status) employeeUpdateData.status = userData.status;
       if (userData.photoUrl !== undefined) employeeUpdateData.photoUrl = userData.photoUrl;
       if (userData.salary !== undefined) employeeUpdateData.salary = userData.salary;
+      
+      // Nouveaux champs
+      if (userData.city !== undefined) employeeUpdateData.city = userData.city;
+      if (userData.postalCode !== undefined) employeeUpdateData.postalCode = userData.postalCode;
+      if (userData.country !== undefined) employeeUpdateData.country = userData.country;
+      if (userData.emergencyContactName !== undefined) employeeUpdateData.emergencyContactName = userData.emergencyContactName;
+      if (userData.emergencyContactPhone !== undefined) employeeUpdateData.emergencyContactPhone = userData.emergencyContactPhone;
+      if (userData.emergencyContactRelationship !== undefined) employeeUpdateData.emergencyContactRelationship = userData.emergencyContactRelationship;
+      if (userData.managerId !== undefined) employeeUpdateData.managerId = userData.managerId;
+      if (userData.departmentId !== undefined) employeeUpdateData.departmentId = userData.departmentId;
+      if (userData.jobTitleId !== undefined) employeeUpdateData.jobTitleId = userData.jobTitleId;
 
       // Mettre à jour l'utilisateur
       await user.update(userUpdateData);

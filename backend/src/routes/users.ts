@@ -6,8 +6,8 @@ import '../models'; // Import pour charger les associations
 
 const router = Router();
 
-// GET all users (admin only)
-router.get('/', authenticateJWT, authorizeRoles('Admin'), async (req: AuthRequest, res) => {
+// GET all users (admin, RH and Manager only)
+router.get('/', authenticateJWT, authorizeRoles('Admin', 'RH', 'Manager'), async (req: AuthRequest, res) => {
   try {
     const users = await userService.getAllUsers();
     res.json(users);
@@ -17,8 +17,8 @@ router.get('/', authenticateJWT, authorizeRoles('Admin'), async (req: AuthReques
   }
 });
 
-// GET user statistics (admin only)
-router.get('/stats', authenticateJWT, authorizeRoles('Admin'), async (req: AuthRequest, res) => {
+// GET user statistics (admin, RH and Manager only)
+router.get('/stats', authenticateJWT, authorizeRoles('Admin', 'RH', 'Manager'), async (req: AuthRequest, res) => {
   try {
     const stats = await userService.getUserStats();
     res.json(stats);
@@ -28,27 +28,27 @@ router.get('/stats', authenticateJWT, authorizeRoles('Admin'), async (req: AuthR
   }
 });
 
-// GET one user (admin or self)
+// GET one user (admin, RH, Manager, or self)
 router.get('/:id', authenticateJWT, async (req: AuthRequest, res) => {
   try {
-  if (req.user?.roleName !== 'Admin' && req.user?.id !== parseInt(req.params.id)) {
-    return res.status(403).json({ error: 'Accès refusé' });
-  }
+    if (req.user?.roleName !== 'Admin' && req.user?.roleName !== 'RH' && req.user?.roleName !== 'Manager' && req.user?.id !== parseInt(req.params.id)) {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
 
     const user = await userService.getUserById(parseInt(req.params.id));
     if (!user) {
       return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
 
-  res.json(user);
+    res.json(user);
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'utilisateur:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
-// CREATE user (admin only)
-router.post('/', authenticateJWT, authorizeRoles('Admin'), async (req: AuthRequest, res) => {
+// CREATE user (admin and RH only)
+router.post('/', authenticateJWT, authorizeRoles('Admin', 'RH'), async (req: AuthRequest, res) => {
   try {
     const { 
       username, 
@@ -106,19 +106,19 @@ router.post('/', authenticateJWT, authorizeRoles('Admin'), async (req: AuthReque
   }
 });
 
-// UPDATE user (admin or self)
+// UPDATE user (admin, RH, Manager, or self)
 router.put('/:id', authenticateJWT, async (req: AuthRequest, res) => {
   try {
-  if (req.user?.roleName !== 'Admin' && req.user?.id !== parseInt(req.params.id)) {
-    return res.status(403).json({ error: 'Accès refusé' });
-  }
+    if (req.user?.roleName !== 'Admin' && req.user?.roleName !== 'RH' && req.user?.roleName !== 'Manager' && req.user?.id !== parseInt(req.params.id)) {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
 
     const userId = parseInt(req.params.id);
     const updateData = req.body;
 
     const user = await userService.updateUser(userId, updateData);
     
-  // Audit log
+    // Audit log
     await logAudit('UPDATE', 'User', userId, JSON.stringify(updateData), req);
     
     res.json({

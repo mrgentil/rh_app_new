@@ -3,6 +3,7 @@ import { sequelize } from './sequelize';
 
 interface EmployeeAttributes {
   id: number;
+  matricule: string; // Nouveau champ matricule
   firstName: string;
   lastName: string;
   email: string;
@@ -28,10 +29,11 @@ interface EmployeeAttributes {
   updatedAt?: Date;
 }
 
-interface EmployeeCreationAttributes extends Optional<EmployeeAttributes, 'id'> {}
+interface EmployeeCreationAttributes extends Optional<EmployeeAttributes, 'id' | 'matricule'> {}
 
 export class Employee extends Model<EmployeeAttributes, EmployeeCreationAttributes> implements EmployeeAttributes {
   public id!: number;
+  public matricule!: string;
   public firstName!: string;
   public lastName!: string;
   public email!: string;
@@ -80,6 +82,11 @@ Employee.init(
       type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true,
+    },
+    matricule: {
+      type: DataTypes.STRING,
+      allowNull: true, // Temporairement nullable pour permettre la génération automatique
+      unique: true,
     },
     firstName: {
       type: DataTypes.STRING,
@@ -176,5 +183,23 @@ Employee.init(
     modelName: 'Employee',
     tableName: 'employees',
     timestamps: true,
+    hooks: {
+      beforeCreate: async (employee: Employee) => {
+        // Générer le matricule automatiquement si non fourni
+        if (!employee.matricule) {
+          const lastEmployee = await Employee.findOne({
+            order: [['id', 'DESC']]
+          });
+          
+          let nextMatricule = 'EMP001';
+          if (lastEmployee && lastEmployee.matricule) {
+            const lastNumber = parseInt(lastEmployee.matricule.replace('EMP', ''));
+            nextMatricule = `EMP${String(lastNumber + 1).padStart(3, '0')}`;
+          }
+          
+          employee.matricule = nextMatricule;
+        }
+      }
+    }
   }
 );

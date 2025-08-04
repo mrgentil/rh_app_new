@@ -13,7 +13,7 @@ export default function NouveauUser() {
   const router = useRouter();
   const { user } = useAuth();
   const { showSuccess, showError, showLoading, dismiss } = useToast();
-  const [form, setForm] = useState<CreateUserData & { photoUrl?: string; salary?: number }>({
+  const [form, setForm] = useState<CreateUserData>({
     username: '',
     email: '',
     password: '',
@@ -21,11 +21,29 @@ export default function NouveauUser() {
     employeeId: undefined,
     photoUrl: '',
     salary: undefined,
+    firstName: '',
+    lastName: '',
+    phone: '',
+    departmentId: undefined,
+    jobTitleId: undefined,
+    address: '',
+    birthDate: '',
+    hireDate: '',
+    status: 'actif',
+    managerId: undefined,
+    city: '',
+    postalCode: '',
+    country: 'France',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    emergencyContactRelationship: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [roles, setRoles] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [jobTitles, setJobTitles] = useState([]);
 
   // Vérifier les permissions
   useEffect(() => {
@@ -38,12 +56,16 @@ export default function NouveauUser() {
 
   const loadData = async () => {
     try {
-      const [rolesData, employeesData] = await Promise.all([
+      const [rolesData, employeesData, departmentsData, jobTitlesData] = await Promise.all([
         userService.getAvailableRoles(),
-        userService.getAvailableEmployees()
+        userService.getAvailableEmployees(),
+        fetch('/api/departments').then(res => res.json()),
+        fetch('/api/job-titles').then(res => res.json())
       ]);
       setRoles(rolesData);
       setEmployees(employeesData);
+      setDepartments(departmentsData);
+      setJobTitles(jobTitlesData);
     } catch (err) {
       showError('Erreur lors du chargement des données');
     }
@@ -53,7 +75,7 @@ export default function NouveauUser() {
     const { name, value } = e.target;
     setForm(prev => ({
       ...prev,
-      [name]: name === 'roleId' || name === 'employeeId'
+      [name]: name === 'roleId' || name === 'employeeId' || name === 'departmentId' || name === 'jobTitleId' || name === 'managerId'
         ? (value ? parseInt(value) : undefined) 
         : value
     }));
@@ -110,12 +132,12 @@ export default function NouveauUser() {
         </div>
 
         {/* Formulaire */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Colonne gauche - Informations de base */}
+              {/* Colonne gauche - Informations utilisateur */}
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Informations de base</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Informations utilisateur</h2>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Nom d'utilisateur *</label>
@@ -172,48 +194,254 @@ export default function NouveauUser() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              {/* Colonne droite - Informations employé */}
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Informations employé</h2>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Prénom *</label>
+                  <input
+                    name="firstName"
+                    value={form.firstName}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Prénom"
+                  />
+                </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Employé associé</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
+                  <input
+                    name="lastName"
+                    value={form.lastName}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Nom"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone *</label>
+                  <input
+                    name="phone"
+                    value={form.phone}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Téléphone"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Département *</label>
                   <select
-                    name="employeeId"
-                    value={form.employeeId || ''}
+                    name="departmentId"
+                    value={form.departmentId || ''}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Sélectionner un département</option>
+                    {departments.map((dept: any) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Poste *</label>
+                  <select
+                    name="jobTitleId"
+                    value={form.jobTitleId || ''}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Sélectionner un poste</option>
+                    {jobTitles.map((job: any) => (
+                      <option key={job.id} value={job.id}>
+                        {job.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Manager</label>
+                  <select
+                    name="managerId"
+                    value={form.managerId || ''}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Sélectionner un employé (optionnel)</option>
+                    <option value="">Sélectionner un manager (optionnel)</option>
                     {employees.map((emp: any) => (
                       <option key={emp.id} value={emp.id}>
-                        {emp.firstName} {emp.lastName} - {emp.JobTitle?.title || 'Poste non défini'}
+                        {emp.firstName} {emp.lastName}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
+            </div>
 
-              {/* Colonne droite - Photo et salaire */}
+            {/* Informations supplémentaires */}
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Photo et rémunération</h2>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Informations personnelles</h3>
                 
-                {/* Photo de l'utilisateur */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Photo de profil</label>
-                  <PhotoUpload
-                    currentPhotoUrl={form.photoUrl}
-                    onPhotoChange={handlePhotoChange}
-                    employeeName={form.username}
-                    disabled={loading}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date de naissance</label>
+                  <input
+                    name="birthDate"
+                    type="date"
+                    value={form.birthDate}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
-                {/* Informations salariales */}
                 <div>
-                  <SalaryDisplay
-                    salary={form.salary}
-                    onSalaryChange={handleSalaryChange}
-                    editable={true}
-                    disabled={loading}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date d'embauche</label>
+                  <input
+                    name="hireDate"
+                    type="date"
+                    value={form.hireDate}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                  <select
+                    name="status"
+                    value={form.status}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="actif">Actif</option>
+                    <option value="inactif">Inactif</option>
+                    <option value="suspendu">Suspendu</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
+                  <input
+                    name="address"
+                    value={form.address}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Adresse complète"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Ville</label>
+                  <input
+                    name="city"
+                    value={form.city}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Ville"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Code postal</label>
+                  <input
+                    name="postalCode"
+                    value={form.postalCode}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Code postal"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Pays</label>
+                  <input
+                    name="country"
+                    value={form.country}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Pays"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact d'urgence</h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nom du contact</label>
+                  <input
+                    name="emergencyContactName"
+                    value={form.emergencyContactName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Nom du contact d'urgence"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone du contact</label>
+                  <input
+                    name="emergencyContactPhone"
+                    value={form.emergencyContactPhone}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Téléphone du contact"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Relation avec le contact</label>
+                  <select
+                    name="emergencyContactRelationship"
+                    value={form.emergencyContactRelationship}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Sélectionner une relation</option>
+                    <option value="Conjoint">Conjoint</option>
+                    <option value="Parent">Parent</option>
+                    <option value="Enfant">Enfant</option>
+                    <option value="Frère/Sœur">Frère/Sœur</option>
+                    <option value="Ami">Ami</option>
+                    <option value="Autre">Autre</option>
+                  </select>
+                </div>
+
+                {/* Photo et salaire */}
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Photo et rémunération</h3>
+                  
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Photo de profil</label>
+                    <PhotoUpload
+                      currentPhotoUrl={form.photoUrl}
+                      onPhotoChange={handlePhotoChange}
+                      employeeName={`${form.firstName} ${form.lastName}`}
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div>
+                    <SalaryDisplay
+                      salary={form.salary}
+                      onSalaryChange={handleSalaryChange}
+                      editable={true}
+                      disabled={loading}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -233,7 +461,7 @@ export default function NouveauUser() {
               </Link>
               <button
                 type="submit"
-                disabled={loading || !form.username || !form.email || !form.password || !form.roleId}
+                disabled={loading || !form.username || !form.email || !form.password || !form.roleId || !form.firstName || !form.lastName || !form.phone || !form.departmentId || !form.jobTitleId}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg disabled:opacity-50 flex items-center"
               >
                 <FaSave className="mr-2" />
