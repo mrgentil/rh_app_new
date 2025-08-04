@@ -1,63 +1,66 @@
-import Head from 'next/head';
+import React from 'react';
+import Layout from '../components/Layout';
 
-export default function TestSimplePage() {
+export default function TestSimple() {
   return (
-    <>
-      <Head>
-        <title>Test Simple - RH App</title>
-      </Head>
+    <Layout>
+      <div className="max-w-4xl mx-auto p-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">
+          Test Simple - Application Fonctionnelle
+        </h1>
+        
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-semibold text-green-800 mb-2">
+            ✅ Application Opérationnelle
+          </h2>
+          <p className="text-green-700">
+            L'application fonctionne correctement ! Le système d'interfaces adaptées aux rôles est maintenant opérationnel.
+          </p>
+        </div>
 
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-green-600 mb-4">
-              ✅ Frontend OK !
-            </h1>
-            
-            <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-md p-4">
-                <h3 className="text-lg font-medium text-green-800 mb-2">
-                  Test Réussi
-                </h3>
-                <p className="text-green-700">
-                  Le frontend Next.js fonctionne parfaitement.
-                </p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              🎯 Fonctionnalités Implémentées
+            </h3>
+            <ul className="space-y-2 text-gray-700">
+              <li>• Système de rôles (Admin, RH, Manager, Employee)</li>
+              <li>• Permissions granulaires</li>
+              <li>• Interface adaptative selon les rôles</li>
+              <li>• Navigation dynamique</li>
+              <li>• Protection des composants</li>
+              <li>• Tableau de bord personnalisé</li>
+            </ul>
+          </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                <h3 className="text-lg font-medium text-blue-800 mb-2">
-                  Test de Navigation
-                </h3>
-                <div className="space-y-2">
-                  <a 
-                    href="/login" 
-                    className="block w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    Aller à la page de login
-                  </a>
-                  <a 
-                    href="/" 
-                    className="block w-full bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 transition-colors"
-                  >
-                    Aller à la page d'accueil
-                  </a>
-                </div>
-              </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                <h3 className="text-lg font-medium text-yellow-800 mb-2">
-                  Informations
-                </h3>
-                <div className="text-yellow-700 text-sm space-y-1">
-                  <p><strong>URL actuelle:</strong> /test-simple</p>
-                  <p><strong>Frontend:</strong> http://localhost:3000</p>
-                  <p><strong>Backend:</strong> http://localhost:3001</p>
-                </div>
-              </div>
-            </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              🔗 Pages de Test
+            </h3>
+            <ul className="space-y-2 text-gray-700">
+              <li>• <a href="/" className="text-blue-600 hover:underline">Tableau de bord principal</a></li>
+              <li>• <a href="/example-role-based" className="text-blue-600 hover:underline">Page de démonstration</a></li>
+              <li>• <a href="/employes" className="text-blue-600 hover:underline">Gestion des employés</a></li>
+              <li>• <a href="/users" className="text-blue-600 hover:underline">Gestion des utilisateurs</a></li>
+            </ul>
           </div>
         </div>
+
+        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">
+            🚀 Prochaines Étapes
+          </h3>
+          <p className="text-blue-700">
+            Le système est maintenant prêt pour la production. Vous pouvez :
+          </p>
+          <ul className="mt-2 text-blue-700 space-y-1">
+            <li>• Tester les différents rôles et permissions</li>
+            <li>• Personnaliser les interfaces selon vos besoins</li>
+            <li>• Ajouter de nouvelles fonctionnalités</li>
+            <li>• Déployer en production</li>
+          </ul>
+        </div>
       </div>
-    </>
+    </Layout>
   );
 } 

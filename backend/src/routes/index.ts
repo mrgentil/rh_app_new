@@ -11,6 +11,7 @@ import setupRoutes from './setup';
 import departmentRoutes from './departments';
 import jobTitleRoutes from './jobTitles';
 import roleRoutes from './roles';
+import profileRoutes from './profile';
 
 const router = Router();
 
@@ -45,5 +46,8 @@ router.use('/setup', setupRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/job-titles', jobTitleRoutes);
 router.use('/roles', roleRoutes);
+
+// Routes du profil utilisateur
+router.use('/profile', profileRoutes);
 
 export default router;

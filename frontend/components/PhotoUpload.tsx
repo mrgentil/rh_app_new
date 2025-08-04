@@ -26,8 +26,8 @@ export default function PhotoUpload({
       
       img.onload = () => {
         // Définir une taille maximale pour l'image
-        const maxWidth = 300;
-        const maxHeight = 300;
+        const maxWidth = 200;
+        const maxHeight = 200;
         
         let { width, height } = img;
         
@@ -50,9 +50,17 @@ export default function PhotoUpload({
         // Dessiner l'image redimensionnée
         ctx?.drawImage(img, 0, 0, width, height);
         
-        // Convertir en base64 avec compression
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        resolve(compressedDataUrl);
+        // Convertir en base64 avec compression plus forte
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+        
+        // Vérifier la taille
+        if (compressedDataUrl.length > 500000) { // ~500KB
+          console.warn('Image encore trop grande, compression supplémentaire...');
+          const extraCompressed = canvas.toDataURL('image/jpeg', 0.3);
+          resolve(extraCompressed);
+        } else {
+          resolve(compressedDataUrl);
+        }
       };
       
       img.src = URL.createObjectURL(file);

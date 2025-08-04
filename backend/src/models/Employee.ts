@@ -18,6 +18,12 @@ interface EmployeeAttributes {
   salary?: number; // Salaire brut annuel
   contractEndDate?: Date; // Pour les stagiaires et contrats temporaires
   employeeType?: string; // permanent, stagiaire, cdi, cdd
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -41,6 +47,12 @@ export class Employee extends Model<EmployeeAttributes, EmployeeCreationAttribut
   public salary?: number;
   public contractEndDate?: Date;
   public employeeType?: string;
+  public city?: string;
+  public postalCode?: string;
+  public country?: string;
+  public emergencyContactName?: string;
+  public emergencyContactPhone?: string;
+  public emergencyContactRelationship?: string;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
 
@@ -132,6 +144,31 @@ Employee.init(
       type: DataTypes.ENUM('permanent', 'stagiaire', 'cdi', 'cdd'),
       allowNull: true,
       defaultValue: 'permanent',
+    },
+    city: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    postalCode: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    country: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: 'France',
+    },
+    emergencyContactName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    emergencyContactPhone: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    emergencyContactRelationship: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
   },
   {

@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { useAuth } from '../hooks/useAuth';
-import { FaUsers, FaCalendarAlt, FaMoneyCheckAlt, FaChartLine, FaBell, FaClock, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
-import { MdDashboard, MdPerson, MdWork } from 'react-icons/md';
-import Link from 'next/link';
+import RoleBasedDashboard from '../components/RoleBasedDashboard';
+import { 
+  FaChartLine, 
+  FaCheckCircle, 
+  FaExclamationTriangle, 
+  FaBell, 
+  FaClock 
+} from 'react-icons/fa';
 
 interface DashboardStats {
   totalEmployees: number;
@@ -133,171 +138,37 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Statistiques principales */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-indigo-100">
-                <FaUsers className="w-6 h-6 text-indigo-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Employés</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalEmployees}</p>
-              </div>
-            </div>
-            <div className="mt-4">
-              <span className="text-sm text-green-600 font-medium">
-                +{stats.activeEmployees} actifs
-              </span>
-            </div>
-          </div>
+        {/* Tableau de bord adaptatif selon les rôles */}
+        <RoleBasedDashboard />
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-100">
-                <MdPerson className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Employés Actifs</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeEmployees}</p>
-              </div>
+        {/* Activités récentes */}
+        <div className="mt-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Activités récentes</h3>
             </div>
-            <div className="mt-4">
-              <span className="text-sm text-green-600 font-medium">
-                {((stats.activeEmployees / stats.totalEmployees) * 100).toFixed(1)}% taux d'activité
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-yellow-100">
-                <FaCalendarAlt className="w-6 h-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Congés en Attente</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.pendingLeaves}</p>
-              </div>
-            </div>
-            <div className="mt-4">
-              <span className="text-sm text-yellow-600 font-medium">
-                Nécessite votre attention
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-purple-100">
-                <FaMoneyCheckAlt className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Masse Salariale</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats.totalPayroll.toLocaleString('fr-FR')} €
-                </p>
-              </div>
-            </div>
-            <div className="mt-4">
-              <span className="text-sm text-purple-600 font-medium">
-                Ce mois
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Actions rapides */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Actions rapides</h3>
-              </div>
-              <div className="p-6 space-y-4">
-                <Link
-                  href="/employes/nouveau"
-                  className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="p-2 rounded-full bg-green-100">
-                    <FaUsers className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900">Ajouter un employé</p>
-                    <p className="text-xs text-gray-600">Créer un nouveau profil</p>
-                  </div>
-                </Link>
-
-                <Link
-                  href="/conges/nouveau"
-                  className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="p-2 rounded-full bg-blue-100">
-                    <FaCalendarAlt className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900">Demande de congé</p>
-                    <p className="text-xs text-gray-600">Soumettre une demande</p>
-                  </div>
-                </Link>
-
-                <Link
-                  href="/paie/nouveau"
-                  className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="p-2 rounded-full bg-purple-100">
-                    <FaMoneyCheckAlt className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900">Gestion de la paie</p>
-                    <p className="text-xs text-gray-600">Traiter les salaires</p>
-                  </div>
-                </Link>
-
-                <Link
-                  href="/users/nouveau"
-                  className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="p-2 rounded-full bg-indigo-100">
-                    <MdPerson className="w-5 h-5 text-indigo-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900">Créer un utilisateur</p>
-                    <p className="text-xs text-gray-600">Nouveau compte système</p>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Activités récentes */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Activités récentes</h3>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  {stats.recentActivities.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className={`flex items-start p-4 rounded-lg border ${getStatusColor(activity.status)}`}
-                    >
-                      <div className="flex-shrink-0 mt-1">
-                        {getStatusIcon(activity.status)}
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <p className="text-sm font-medium text-gray-900">{activity.message}</p>
-                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                      </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                {stats.recentActivities.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className={`flex items-start p-4 rounded-lg border ${getStatusColor(activity.status)}`}
+                  >
+                    <div className="flex-shrink-0 mt-1">
+                      {getStatusIcon(activity.status)}
                     </div>
-                  ))}
-                </div>
-                
-                <div className="mt-6 text-center">
-                  <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                    Voir toutes les activités →
-                  </button>
-                </div>
+                    <div className="ml-4 flex-1">
+                      <p className="text-sm font-medium text-gray-900">{activity.message}</p>
+                      <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-6 text-center">
+                <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                  Voir toutes les activités →
+                </button>
               </div>
             </div>
           </div>

@@ -11,6 +11,16 @@ interface UserAttributes {
   isActive?: boolean;
   photoUrl?: string;
   salary?: number;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -27,6 +37,16 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public isActive?: boolean;
   public photoUrl?: string;
   public salary?: number;
+  public firstName?: string;
+  public lastName?: string;
+  public phone?: string;
+  public address?: string;
+  public city?: string;
+  public postalCode?: string;
+  public country?: string;
+  public emergencyContactName?: string;
+  public emergencyContactPhone?: string;
+  public emergencyContactRelationship?: string;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
 
@@ -80,6 +100,47 @@ User.init(
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
       comment: 'Salaire brut annuel en euros',
+    },
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    address: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    city: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    postalCode: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    country: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: 'France',
+    },
+    emergencyContactName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    emergencyContactPhone: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    emergencyContactRelationship: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
   },
   {
