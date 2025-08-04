@@ -14,6 +14,7 @@ interface EmployeeAttributes {
   jobTitleId?: number;
   departmentId?: number;
   managerId?: number; // Auto-relation pour la hiérarchie
+  teamId?: number; // Équipe de l'employé
   status: string; // actif, suspendu, démissionnaire, licencié
   photoUrl?: string;
   salary?: number; // Salaire brut annuel
@@ -44,6 +45,7 @@ export class Employee extends Model<EmployeeAttributes, EmployeeCreationAttribut
   public jobTitleId?: number;
   public departmentId?: number;
   public managerId?: number;
+  public teamId?: number;
   public status!: string;
   public photoUrl?: string;
   public salary?: number;
@@ -129,13 +131,17 @@ Employee.init(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true,
     },
+    teamId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+    },
     status: {
       type: DataTypes.ENUM('actif', 'suspendu', 'démissionnaire', 'licencié'),
       allowNull: false,
       defaultValue: 'actif',
     },
     photoUrl: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     salary: {

@@ -14,7 +14,10 @@ import {
   FaCog, 
   FaBuilding,
   FaUserCog,
-  FaBell
+  FaBell,
+  FaUserFriends,
+  FaBullseye,
+  FaTasks
 } from 'react-icons/fa';
 
 export default function Sidebar() {
@@ -86,6 +89,48 @@ export default function Sidebar() {
           >
             <FaUserCog className="w-5 h-5" />
             <span>Utilisateurs</span>
+          </Link>
+        )}
+
+        {(user?.role === 'Admin' || user?.role === 'RH' || user?.role === 'Manager') && (
+          <Link
+            href="/teams"
+            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+              isActive('/teams')
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+            }`}
+          >
+            <FaUserFriends className="w-5 h-5" />
+            <span>Équipes</span>
+          </Link>
+        )}
+
+        {(user?.role === 'Admin' || user?.role === 'RH' || user?.role === 'Manager') && (
+          <Link
+            href="/objectives"
+            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+              isActive('/objectives')
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+            }`}
+          >
+            <FaBullseye className="w-5 h-5" />
+            <span>Objectifs</span>
+          </Link>
+        )}
+
+        {(user?.role === 'Admin' || user?.role === 'RH' || user?.role === 'Manager') && (
+          <Link
+            href="/projects"
+            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+              isActive('/projects')
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+            }`}
+          >
+            <FaTasks className="w-5 h-5" />
+            <span>Projets</span>
           </Link>
         )}
 

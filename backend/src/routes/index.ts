@@ -12,6 +12,8 @@ import departmentRoutes from './departments';
 import jobTitleRoutes from './jobTitles';
 import roleRoutes from './roles';
 import profileRoutes from './profile';
+import teamRoutes from './teams';
+import objectiveRoutes from './objectives';
 
 const router = Router();
 
@@ -49,5 +51,9 @@ router.use('/roles', roleRoutes);
 
 // Routes du profil utilisateur
 router.use('/profile', profileRoutes);
+
+// Routes de gestion d'équipe et management
+router.use('/teams', teamRoutes);
+router.use('/objectives', objectiveRoutes);
 
 export default router;

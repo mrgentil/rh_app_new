@@ -21,6 +21,10 @@ import { Message } from './Message';
 import { Announcement } from './Announcement';
 import { Role } from './Role';
 import { Invoice } from './Invoice';
+import { Team } from './Team';
+import { Objective } from './Objective';
+import { Project } from './Project';
+import { PerformanceReview } from './PerformanceReview';
 
 // A. Gestion des employés - Associations
 Employee.belongsTo(JobTitle, { foreignKey: 'jobTitleId' });
@@ -89,6 +93,42 @@ Document.belongsTo(Employee, { foreignKey: 'employeeId' });
 Employee.hasMany(Notification, { foreignKey: 'employeeId' });
 Notification.belongsTo(Employee, { foreignKey: 'employeeId' });
 
+// I. Gestion d'équipe et Management - Associations
+// Teams
+Team.belongsTo(Employee, { as: 'manager', foreignKey: 'managerId' });
+Employee.hasMany(Team, { as: 'managedTeams', foreignKey: 'managerId' });
+
+Team.belongsTo(Department, { foreignKey: 'departmentId' });
+Department.hasMany(Team, { foreignKey: 'departmentId' });
+
+// Team Members (Many-to-Many via Employee.teamId)
+Employee.belongsTo(Team, { as: 'team', foreignKey: 'teamId' });
+Team.hasMany(Employee, { as: 'members', foreignKey: 'teamId' });
+
+// Objectives
+Objective.belongsTo(Employee, { as: 'employee', foreignKey: 'employeeId' });
+Employee.hasMany(Objective, { as: 'objectives', foreignKey: 'employeeId' });
+
+Objective.belongsTo(Employee, { as: 'assignedByEmployee', foreignKey: 'assignedBy' });
+Employee.hasMany(Objective, { as: 'assignedObjectives', foreignKey: 'assignedBy' });
+
+Objective.belongsTo(Team, { foreignKey: 'teamId' });
+Team.hasMany(Objective, { foreignKey: 'teamId' });
+
+// Projects
+Project.belongsTo(Team, { foreignKey: 'teamId' });
+Team.hasMany(Project, { foreignKey: 'teamId' });
+
+Project.belongsTo(Employee, { as: 'manager', foreignKey: 'managerId' });
+Employee.hasMany(Project, { as: 'managedProjects', foreignKey: 'managerId' });
+
+// Performance Reviews
+PerformanceReview.belongsTo(Employee, { as: 'employee', foreignKey: 'employeeId' });
+Employee.hasMany(PerformanceReview, { as: 'performanceReviews', foreignKey: 'employeeId' });
+
+PerformanceReview.belongsTo(Employee, { as: 'reviewer', foreignKey: 'reviewerId' });
+Employee.hasMany(PerformanceReview, { as: 'reviewedPerformanceReviews', foreignKey: 'reviewerId' });
+
 // Export all models
 export {
   Employee,
@@ -111,5 +151,9 @@ export {
   Announcement,
   Role,
   Invoice,
+  Team,
+  Objective,
+  Project,
+  PerformanceReview,
 };
 

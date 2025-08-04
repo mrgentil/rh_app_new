@@ -41,7 +41,7 @@ app.use('*', (req, res) => {
 });
 
 // Start server
-sequelize.sync().then(() => {
+sequelize.authenticate().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Backend démarré sur http://localhost:${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/health`);
