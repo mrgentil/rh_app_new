@@ -10,6 +10,8 @@ export const PERMISSIONS = {
     EDIT_SALARY: 'employees:edit_salary',
     VIEW_PERSONAL: 'employees:view_personal',
     EDIT_PERSONAL: 'employees:edit_personal',
+    VIEW_TEAM: 'employees:view_team',
+    EDIT_TEAM: 'employees:edit_team',
   },
   
   // Gestion des utilisateurs
@@ -157,6 +159,8 @@ export const ROLE_PERMISSIONS = {
     // Employés (limité à son département)
     PERMISSIONS.EMPLOYEES.VIEW,
     PERMISSIONS.EMPLOYEES.VIEW_PERSONAL,
+    PERMISSIONS.EMPLOYEES.VIEW_TEAM,
+    PERMISSIONS.EMPLOYEES.EDIT_TEAM,
     
     // Congés
     PERMISSIONS.LEAVES.VIEW,
@@ -216,5 +220,5 @@ export function hasPermission(userPermissions: string[], requiredPermission: Per
 
 // Fonction pour obtenir les permissions d'un rôle
 export function getRolePermissions(roleName: RoleName): string[] {
-  return ROLE_PERMISSIONS[roleName] || [];
+  return [...(ROLE_PERMISSIONS[roleName] || [])];
 } 

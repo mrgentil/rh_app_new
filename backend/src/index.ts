@@ -8,9 +8,21 @@ const app = express();
 const PORT = 3001; // Forcer le port 3001
 
 // Middleware
-app.use(cors({ 
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000', 
-  credentials: true 
+// Autoriser plusieurs origines pour le front (ex: 3000 et 3002 en dev)
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:3000',
+  'http://localhost:3002'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // origin peut être undefined pour des requêtes same-origin ou outils
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origine non autorisée par CORS: ${origin}`));
+  },
+  credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

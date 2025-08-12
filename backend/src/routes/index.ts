@@ -14,6 +14,9 @@ import roleRoutes from './roles';
 import profileRoutes from './profile';
 import teamRoutes from './teams';
 import objectiveRoutes from './objectives';
+import managerEmployeeRoutes from './manager/employees';
+import managerTeamRoutes from './manager/teamManagement';
+import managerTestRoutes from './manager/test';
 
 const router = Router();
 
@@ -55,5 +58,10 @@ router.use('/profile', profileRoutes);
 // Routes de gestion d'équipe et management
 router.use('/teams', teamRoutes);
 router.use('/objectives', objectiveRoutes);
+
+// Routes Manager
+router.use('/manager/employees', managerEmployeeRoutes);
+router.use('/manager/team-management', managerTeamRoutes);
+router.use('/manager/test', managerTestRoutes);
 
 export default router;

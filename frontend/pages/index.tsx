@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Layout from '../components/Layout';
 import { useAuth } from '../hooks/useAuth';
-import RoleBasedDashboard from '../components/RoleBasedDashboard';
+import RoleBasedDashboardEnhanced from '../components/RoleBasedDashboardEnhanced';
 import { 
   FaChartLine, 
   FaCheckCircle, 
@@ -26,6 +27,7 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats>({
     totalEmployees: 0,
     activeEmployees: 0,
@@ -34,6 +36,14 @@ export default function DashboardPage() {
     recentActivities: []
   });
   const [isLoading, setIsLoading] = useState(true);
+
+  // Redirection automatique pour les Managers
+  useEffect(() => {
+    if (user?.role === 'Manager') {
+      router.push('/manager');
+      return;
+    }
+  }, [user?.role, router]);
 
   useEffect(() => {
     // Simuler le chargement des données
@@ -139,7 +149,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Tableau de bord adaptatif selon les rôles */}
-        <RoleBasedDashboard />
+        <RoleBasedDashboardEnhanced />
 
         {/* Activités récentes */}
         <div className="mt-8">

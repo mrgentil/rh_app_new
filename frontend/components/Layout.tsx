@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Sidebar from './Sidebar';
+import EnhancedSidebar from './EnhancedSidebar';
 import Navbar from './Navbar';
 import { useAuth } from '../hooks/useAuth';
 // import { SuspensionNotification } from './SuspensionNotification';
@@ -14,7 +14,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className={`min-h-screen flex ${darkMode ? 'dark' : ''}`}>
       {/* <SuspensionNotification /> */}
-      <Sidebar />
+      <EnhancedSidebar />
       
       {/* Main content */}
       <div className="flex-1">

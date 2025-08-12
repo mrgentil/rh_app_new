@@ -47,6 +47,98 @@ export const PERMISSIONS = {
     APPROVE: 'leaves:approve',
     REJECT: 'leaves:reject',
     VIEW_ALL: 'leaves:view_all',
+    VIEW_OWN: 'leaves:view_own',
+    VIEW_TEAM: 'leaves:view_team',
+  },
+  
+  // Gestion des projets
+  PROJECTS: {
+    VIEW: 'projects:view',
+    CREATE: 'projects:create',
+    EDIT: 'projects:edit',
+    DELETE: 'projects:delete',
+    VIEW_ALL: 'projects:view_all',
+    VIEW_ASSIGNED: 'projects:view_assigned',
+    MANAGE: 'projects:manage',
+    ASSIGN: 'projects:assign',
+  },
+  
+  // Gestion des tâches
+  TASKS: {
+    VIEW: 'tasks:view',
+    CREATE: 'tasks:create',
+    EDIT: 'tasks:edit',
+    DELETE: 'tasks:delete',
+    ASSIGN: 'tasks:assign',
+    VIEW_ALL: 'tasks:view_all',
+    VIEW_ASSIGNED: 'tasks:view_assigned',
+    CHANGE_STATUS: 'tasks:change_status',
+  },
+  
+  // Communication et chat
+  COMMUNICATION: {
+    CHANNELS_VIEW: 'channels:view',
+    CHANNELS_CREATE: 'channels:create',
+    CHANNELS_MANAGE: 'channels:manage',
+    CHAT_SEND: 'chat:send',
+    CHAT_VIEW: 'chat:view',
+    CHAT_MODERATE: 'chat:moderate',
+    CHAT_DELETE: 'chat:delete',
+  },
+  
+  // Suivi du temps
+  TIME_TRACKING: {
+    VIEW: 'time_tracking:view',
+    CREATE: 'time_tracking:create',
+    EDIT: 'time_tracking:edit',
+    VIEW_ALL: 'time_tracking:view_all',
+    VIEW_TEAM: 'time_tracking:view_team',
+    APPROVE: 'time_tracking:approve',
+  },
+  
+  // Gamification
+  GAMIFICATION: {
+    BADGES_VIEW: 'badges:view',
+    BADGES_CREATE: 'badges:create',
+    BADGES_ASSIGN: 'badges:assign',
+    POINTS_VIEW: 'points:view',
+    POINTS_MANAGE: 'points:manage',
+  },
+  
+  // Sondages et bien-être
+  SURVEYS: {
+    VIEW: 'surveys:view',
+    CREATE: 'surveys:create',
+    EDIT: 'surveys:edit',
+    DELETE: 'surveys:delete',
+    RESPOND: 'surveys:respond',
+    VIEW_RESULTS: 'surveys:view_results',
+  },
+  
+  // Processus d'intégration
+  ONBOARDING: {
+    VIEW: 'onboarding:view',
+    CREATE: 'onboarding:create',
+    EDIT: 'onboarding:edit',
+    MANAGE: 'onboarding:manage',
+  },
+  
+  // Analytics et rapports
+  ANALYTICS: {
+    VIEW: 'analytics:view',
+    FINANCIAL: 'analytics:financial',
+    HR: 'analytics:hr',
+    PROJECTS: 'analytics:projects',
+    EXPORT: 'analytics:export',
+  },
+  
+  // Tableaux de bord
+  DASHBOARD: {
+    VIEW: 'dashboard:view',
+    ADMIN: 'dashboard:admin',
+    HR: 'dashboard:hr',
+    MANAGER: 'dashboard:manager',
+    FINANCIAL: 'dashboard:financial',
   },
   
   // Gestion de la paie

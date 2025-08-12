@@ -125,24 +125,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔐 Déconnexion en cours...');
       
-      // Appel à l'API de déconnexion
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        console.log('✅ Déconnexion réussie côté serveur');
-      } else {
-        console.warn('⚠️ Erreur lors de la déconnexion côté serveur');
-      }
-    } catch (error) {
-      console.error('❌ Erreur lors de la déconnexion:', error);
-    } finally {
-      // Toujours nettoyer côté client
-      console.log('🧹 Nettoyage côté client...');
+      // Nettoyage immédiat côté client pour éviter les problèmes
       setUser(null);
-      router.push('/login');
+      
+      // Appel à l'API de déconnexion en arrière-plan
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/logout`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          console.log('✅ Déconnexion réussie côté serveur');
+        } else {
+          console.warn('⚠️ Erreur lors de la déconnexion côté serveur, mais utilisateur déconnecté côté client');
+        }
+      } catch (error) {
+        console.error('❌ Erreur API déconnexion (ignorée):', error);
+      }
+      
+      // Redirection vers login
+      console.log('🧹 Redirection vers login...');
+      await router.push('/login');
+      
+    } catch (error) {
+      console.error('❌ Erreur critique lors de la déconnexion:', error);
+      // Forcer la déconnexion même en cas d'erreur
+      setUser(null);
+      window.location.href = '/login';
     }
   };
 

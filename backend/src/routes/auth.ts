@@ -5,6 +5,9 @@ import jwt from 'jsonwebtoken';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
+const IS_PROD = process.env.NODE_ENV === 'production';
+const COOKIE_SECURE = IS_PROD; // secure cookies only in production by default
+const COOKIE_SAMESITE: 'none' | 'lax' = COOKIE_SECURE ? 'none' : 'lax';
 
 // Middleware pour vérifier le token
 const authenticateToken = async (req: any, res: any, next: any) => {
@@ -72,10 +75,12 @@ router.post('/login', async (req, res) => {
       { expiresIn: '1d' }
     );
     
-    res.cookie('token', token, { 
-      httpOnly: true, 
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+    // Cookies cross-origin (frontend 3002, backend 3001)
+    // En dev (non production): utiliser secure=false et sameSite='lax' pour compatibilité HTTP local
+    res.cookie('token', token, {
+      httpOnly: true,
+      sameSite: COOKIE_SAMESITE,
+      secure: COOKIE_SECURE,
       maxAge: 24 * 60 * 60 * 1000 // 1 jour
     });
     
@@ -161,7 +166,11 @@ router.get('/me', authenticateToken, async (req, res) => {
 
 // Route de déconnexion
 router.post('/logout', (req, res) => {
-  res.clearCookie('token');
+  res.clearCookie('token', {
+    httpOnly: true,
+    sameSite: COOKIE_SAMESITE,
+    secure: COOKIE_SECURE
+  });
   res.json({ message: 'Déconnexion réussie' });
 });
 

@@ -2,6 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '../hooks/useAuth';
+import { ProtectedLink } from './PermissionGuard';
+import { PERMISSIONS } from '../types/permissions';
 import { 
   FaHome, 
   FaUsers, 
@@ -17,12 +19,20 @@ import {
   FaBell,
   FaUserFriends,
   FaBullseye,
-  FaTasks
+  FaTasks,
+  FaProjectDiagram,
+  FaComments,
+  FaClock,
+  FaTrophy,
+  FaPoll,
+  FaChartBar,
+  FaRocket
 } from 'react-icons/fa';
 
 export default function Sidebar() {
   const router = useRouter();
   const { user } = useAuth();
+  const role = (user?.role || (user as any)?.roleName || '').toLowerCase();
 
   const isActive = (href: string) => {
     return router.pathname === href || router.pathname.startsWith(href + '/');
@@ -64,7 +74,7 @@ export default function Sidebar() {
           <span>Mon Profil</span>
         </Link>
 
-        {(user?.role === 'Admin' || user?.role === 'RH') && (
+        {(role === 'admin' || role === 'administrateur' || role === 'rh') && (
           <Link
             href="/employes"
             className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
@@ -78,7 +88,21 @@ export default function Sidebar() {
           </Link>
         )}
 
-        {(user?.role === 'Admin' || user?.role === 'RH') && (
+        {role === 'manager' && (
+          <Link
+            href="/employes/manager"
+            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+              isActive('/employes/manager')
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+            }`}
+          >
+            <FaUsers className="w-5 h-5" />
+            <span>Mon Équipe</span>
+          </Link>
+        )}
+
+        {(role === 'admin' || role === 'administrateur' || role === 'rh') && (
           <Link
             href="/users"
             className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
@@ -92,7 +116,7 @@ export default function Sidebar() {
           </Link>
         )}
 
-        {(user?.role === 'Admin' || user?.role === 'RH' || user?.role === 'Manager') && (
+        {(role === 'admin' || role === 'administrateur' || role === 'rh' || role === 'manager') && (
           <Link
             href="/teams"
             className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
@@ -106,7 +130,7 @@ export default function Sidebar() {
           </Link>
         )}
 
-        {(user?.role === 'Admin' || user?.role === 'RH' || user?.role === 'Manager') && (
+        {(role === 'admin' || role === 'administrateur' || role === 'rh' || role === 'manager') && (
           <Link
             href="/objectives"
             className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
@@ -120,7 +144,7 @@ export default function Sidebar() {
           </Link>
         )}
 
-        {(user?.role === 'Admin' || user?.role === 'RH' || user?.role === 'Manager') && (
+        {(role === 'admin' || role === 'administrateur' || role === 'rh' || role === 'manager') && (
           <Link
             href="/projects"
             className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
@@ -134,7 +158,7 @@ export default function Sidebar() {
           </Link>
         )}
 
-        {user?.role === 'Admin' && (
+        {(role === 'admin' || role === 'administrateur') && (
           <Link
             href="/departments"
             className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
@@ -148,7 +172,7 @@ export default function Sidebar() {
           </Link>
         )}
 
-        {user?.role === 'Admin' && (
+        {(role === 'admin' || role === 'administrateur') && (
           <Link
             href="/roles"
             className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
@@ -174,7 +198,7 @@ export default function Sidebar() {
           <span>Congés</span>
         </Link>
 
-        {(user?.role === 'Admin' || user?.role === 'RH') && (
+        {(role === 'admin' || role === 'administrateur' || role === 'rh' || role === 'manager') && (
           <Link
             href="/paie"
             className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
@@ -185,6 +209,90 @@ export default function Sidebar() {
           >
             <FaMoneyCheckAlt className="w-5 h-5" />
             <span>Paie</span>
+          </Link>
+        )}
+
+        {(role === 'admin' || role === 'administrateur' || role === 'rh' || role === 'manager') && (
+          <Link
+            href="/tasks"
+            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+              isActive('/tasks')
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+            }`}
+          >
+            <FaTasks className="w-5 h-5" />
+            <span>Tâches</span>
+          </Link>
+        )}
+
+        {(role === 'admin' || role === 'administrateur' || role === 'rh' || role === 'manager') && (
+          <Link
+            href="/time-tracking"
+            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+              isActive('/time-tracking')
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+            }`}
+          >
+            <FaClock className="w-5 h-5" />
+            <span>Temps & Planning</span>
+          </Link>
+        )}
+
+        {(role === 'admin' || role === 'administrateur' || role === 'rh' || role === 'manager') && (
+          <Link
+            href="/trainings"
+            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+              isActive('/trainings')
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+            }`}
+          >
+            <FaRocket className="w-5 h-5" />
+            <span>Formations</span>
+          </Link>
+        )}
+
+        {(role === 'admin' || role === 'administrateur' || role === 'rh' || role === 'manager') && (
+          <Link
+            href="/performance"
+            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+              isActive('/performance')
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+            }`}
+          >
+            <FaTrophy className="w-5 h-5" />
+            <span>Performance</span>
+          </Link>
+        )}
+
+        {(role === 'admin' || role === 'administrateur' || role === 'rh' || role === 'manager') && (
+          <Link
+            href="/communication"
+            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+              isActive('/communication')
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+            }`}
+          >
+            <FaComments className="w-5 h-5" />
+            <span>Communication</span>
+          </Link>
+        )}
+
+        {(role === 'admin' || role === 'administrateur' || role === 'rh' || role === 'manager') && (
+          <Link
+            href="/analytics"
+            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+              isActive('/analytics')
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+            }`}
+          >
+            <FaChartBar className="w-5 h-5" />
+            <span>Analytics</span>
           </Link>
         )}
 
@@ -200,7 +308,7 @@ export default function Sidebar() {
           <span>Documents</span>
         </Link>
 
-        {user?.role === 'Admin' && (
+        {(role === 'admin' || role === 'administrateur') && (
           <Link
             href="/audit-logs"
             className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
@@ -226,7 +334,7 @@ export default function Sidebar() {
           <span>Notifications</span>
         </Link>
 
-        {user?.role === 'Admin' && (
+        {(role === 'admin' || role === 'administrateur') && (
           <Link
             href="/settings"
             className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
@@ -242,4 +350,4 @@ export default function Sidebar() {
       </nav>
     </div>
   );
-} 
+}

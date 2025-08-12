@@ -12,6 +12,7 @@ interface Notification {
 }
 
 export default function Notifications() {
+  const { showSuccess } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([
     {
@@ -48,7 +49,6 @@ export default function Notifications() {
     }
   ]);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { showToast } = useToast();
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -109,12 +109,12 @@ export default function Notifications() {
     setNotifications(prev => 
       prev.map(notification => ({ ...notification, read: true }))
     );
-    showToast('Toutes les notifications ont été marquées comme lues', 'success');
+    showSuccess('Toutes les notifications ont été marquées comme lues');
   };
 
   const deleteNotification = (id: number) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
-    showToast('Notification supprimée', 'success');
+    showSuccess('Notification supprimée');
   };
 
   const handleNotificationClick = (notification: Notification) => {
